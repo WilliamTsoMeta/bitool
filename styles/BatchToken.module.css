@@ -1,0 +1,26 @@
+.chooseChain {
+  :global(.ant-select-selector) {
+    height: 46px !important;
+    border: 1px solid #355dff !important;
+    line-height: 46px;
+  }
+  :global(.ant-select-selection-item) {
+    line-height: 46px;
+  }
+  :global(.ant-space) {
+    line-height: 46px;
+  }
+  :global(.ant-select) {
+    width: 100%;
+  }
+}
+
+.chooseToken {
+  :global(.ant-select-selector) {
+    height: 46px !important;
+    border: 1px solid #355dff !important;
+  }
+  :global(.ant-select-selection-item-remove) {
+    line-height: 18px;
+  }
+}

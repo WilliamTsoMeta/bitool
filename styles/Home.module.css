@@ -1,0 +1,88 @@
+.description {
+  display: flex;
+  justify-content: flex-end;
+  .desc-img {
+    max-width: 721px;
+    margin-top: 100px;
+  }
+}
+
+.tool-card {
+  border: 2px solid #355dff1a;
+  .tool-card-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    img {
+      width: 56px;
+      height: 56px;
+    }
+    justify-content: center;
+    align-items: center;
+    border-radius: 30px;
+  }
+  hr {
+    height: 1px;
+    width: 80%;
+  }
+  ul {
+    width: 80%;
+    line-height: 34px;
+    li {
+      font-size: 14px;
+      color: #9a9a9a;
+      i {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 100%;
+        margin-right: 5px;
+      }
+    }
+  }
+  .btn {
+    width: 80%;
+  }
+  .card-arrow {
+    margin-left: 5px;
+  }
+}
+
+.tool-card-project {
+  border: 2px solid #355dff1a;
+  ul {
+    width: 80%;
+    line-height: 20px;
+    li {
+      color: #9a9a9a;
+      i {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 100%;
+        margin-right: 5px;
+      }
+    }
+  }
+  .btn {
+    width: 80%;
+  }
+  .card-arrow {
+    margin-left: 5px;
+  }
+}
+
+.tool-bg {
+  background: #f4f4f4ff;
+}
+
+.round-arrow {
+  width: 48px;
+  height: 48px;
+  background: url('/images/protogot1.webp') no-repeat;
+  background-size: contain;
+}
+.round-arrow:hover {
+  background: url('/images/protogot2.webp') no-repeat;
+  background-size: contain;
+}

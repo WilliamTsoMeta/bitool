@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.banner {
+  background: linear-gradient(180deg, RGBA(240, 244, 254, 1), transparent);
+  border-top: 1px solid RGBA(221, 223, 233, 1);
+}
+
+.table :where(thead, tfoot) :where(th, td),
+.table-zebra tbody tr:nth-child(even) td {
+  background: #f7f7f7;
+}
+
+.spin {
+  background: none;
+  border: 0;
+  color: black;
+}
+.spin.loading::before {
+  height: 5rem;
+  width: 5rem;
+  border-width: 3px;
+}
