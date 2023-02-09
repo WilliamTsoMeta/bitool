@@ -43,51 +43,105 @@ export default function Step2() {
         )
         let totalSum = addressCount.reduce((acc, curr) => acc + curr, 0)
         total = Number(totalSum.toFixed(4))
+
         settotalToken(total)
 
-        if (gasFee) {
-          setestimateGas(
-            formatUnits(Number(gasFee.formatted.gasPrice) * total, 'ether')
-          )
-        }
+        getEstimation(contract).then((estimation) => {
+          if (gasFee && !isNaN(estimation)) {
+            let gasPrice = BigNumber.from(gasFee?.formatted.gasPrice)
+            let estmationB = BigNumber.from(estimation)
+
+            setestimateGas(
+              formatUnits(gasPrice.mul(estmationB).toString(), 'ether')
+            )
+            console.log('fee', gasPrice.mul(estmationB).toString())
+          }
+        })
       }
     } catch (error) {
-      console.log('error', error)
+      console.log('error step2 65', error)
     }
   }, [batchTokenData.parsedAddress, gasFee])
 
   useEffect(() => {
-    console.log(
-      'batchTokenData.contractAddress',
-      batchTokenData.contractAddress
-    )
     if (batchTokenData.contractAddress) {
       const contract = getContract({
         address: batchTokenData.contractAddress,
         abi: multiSenderABI,
+        signerOrProvider: provider,
       })
       setcontract(contract)
     }
     console.log('contract', contract)
   }, [batchTokenData.contractAddress])
 
+  const getEstimation = async (contract: any) => {
+    if (contract.estimateGas) {
+      try {
+        let addr: string[] = []
+        let amn: string[] = []
+        let sum: number = 0
+        batchTokenData.parsedAddress.map((value) => {
+          addr.push(value[0])
+          sum += Number(value[1])
+          amn.push(
+            ethers.utils
+              .parseUnits(value[1], batchTokenData.tokenDecimals)
+              .toString()
+          )
+        })
+
+        if (batchTokenData.unit === batchTokenData.gasUnit) {
+          // platform token
+          let sumAmn = ethers.utils.parseUnits(
+            sum.toFixed(4),
+            batchTokenData.tokenDecimals
+          )
+          const rawGasEstimation = await contract
+            ?.connect(signer as any)
+            .estimateGas.sendMultiETH(addr, amn, {
+              value: sumAmn,
+            })
+          return rawGasEstimation
+        } else {
+          // wildcard token
+          if (batchTokenData.tokenAddress) {
+            const rawGasEstimation = await contract
+              ?.connect(signer as any)
+              .estimateGas.sendMultiERC20(
+                batchTokenData.tokenAddress,
+                addr,
+                amn
+              )
+            return rawGasEstimation
+          }
+        }
+      } catch (error: unknown) {
+        console.log('estttttt err', error)
+        return 999999
+      }
+    }
+  }
+
   const getAllowance = async (contract: any) => {
     // contract batch token contract --mutisender
     try {
-      const tokenContract = new ethers.Contract(
-        batchTokenData.tokenAddress,
-        erc20ABI,
-        provider
-      )
-      settokenContract(tokenContract)
-      const allowance = await tokenContract.allowance(
-        walletAddr,
-        contract.address
-      )
-      if (Number(allowance) <= 0) {
-        setapproved(false)
-      } else {
-        setapproved(true)
+      if (batchTokenData.tokenAddress) {
+        const tokenContract = new ethers.Contract(
+          batchTokenData.tokenAddress,
+          erc20ABI,
+          provider
+        )
+        settokenContract(tokenContract)
+        const allowance = await tokenContract.allowance(
+          walletAddr,
+          contract.address
+        )
+        if (Number(allowance) <= 0) {
+          setapproved(false)
+        } else {
+          setapproved(true)
+        }
       }
     } catch (error) {
       console.log('error', error)
@@ -128,7 +182,6 @@ export default function Step2() {
         let amn: string[] = []
         let sum: number = 0
         batchTokenData.parsedAddress.map((value) => {
-          console.log('value', value)
           addr.push(value[0])
           sum += Number(value[1])
           amn.push(
@@ -138,19 +191,13 @@ export default function Step2() {
           )
         })
         setprogress('loading')
-        console.log('addr', addr)
-        console.log('contract', contract)
 
         if (batchTokenData.unit === batchTokenData.gasUnit) {
-          console.log('amn', amn)
-
           // platform token
           let sumAmn = ethers.utils.parseUnits(
             sum.toFixed(4),
             batchTokenData.tokenDecimals
           )
-          console.log('sum.toFixed(4)', sum.toFixed(4))
-          console.log('addr', addr)
 
           txn = await contract?.connect(signer as any).sendMultiETH(addr, amn, {
             value: sumAmn,
@@ -177,10 +224,6 @@ export default function Step2() {
   }
 
   const removeAddr = (index: number) => {
-    console.log(
-      'batchTokenData.parsedAddress',
-      batchTokenData.parsedAddress.length
-    )
     if (batchTokenData.parsedAddress.length > 1) {
       let tempArr = [...batchTokenData.parsedAddress]
       tempArr.splice(index, 1)
