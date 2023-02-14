@@ -59,6 +59,10 @@ function reducer(
       return { ...state }
     case 'UPDATE_SUPPORT_CHAINS':
       state.supportChains = action.payload
+      return { ...state }
+    case 'UPDATE_TXN':
+      state.txn = action.payload
+      return { ...state }
     default:
       throw new Error('none type fit')
   }
@@ -197,6 +201,7 @@ export default function BatchTokenSender() {
         ],
       },
     ],
+    txn: '',
   } as BatchTokenContextType)
 
   return (

@@ -211,12 +211,18 @@ export default function Step2() {
           result = await txn.wait()
         }
         console.log('txn', txn)
+        setBatchTokenData({ type: 'UPDATE_TXN', payload: txn.hash })
         setBatchTokenData({ type: 'UPDATE_STEP', payload: 3 })
       } catch (error: unknown) {
         setprogress('error')
         const e = error as IJsonRPCError
         if (e.message.indexOf('user rejected') >= 0) {
           setprogressErrorMsg('User Rejected')
+        }
+        if (e.message === 'Internal JSON-RPC error.') {
+          if (e.data.message.indexOf('gas required exceeds') >= 0) {
+            setprogressErrorMsg('gas required exceeds')
+          }
         }
         console.log('send err', e.message, e.code, e.data)
       }

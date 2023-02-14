@@ -26,6 +26,7 @@ export interface BatchTokenContextType {
   addrErr: addrErrType
   simpleNumber: number
   supportChains: supportChainsType[]
+  txn: string
 }
 
 export interface errType {
