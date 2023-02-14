@@ -2,6 +2,9 @@ import Header from 'components/Header'
 import Footer from 'components/Footer'
 import Image from 'next/image'
 import React, { useRef, useState, useEffect, useContext, useMemo } from 'react'
+import { MainNet } from './components/MainNet'
+import { TestNet } from './components/TestNet'
+
 const GasStationIndex = () => {
   const [sendType, setsendType] = useState('main')
   const [supportChains, setsupportChains] = useState([
@@ -119,13 +122,6 @@ const GasStationIndex = () => {
     },
   ])
 
-  useEffect(() => {
-    console.log('xxx')
-    return () => {
-      console.log('unmounted')
-    }
-  }, [])
-
   function toggleOperationType(type: string) {
     setsendType(sendType === 'main' ? 'test' : 'main')
   }
@@ -153,9 +149,9 @@ const GasStationIndex = () => {
               className={`px-16 py-3 font-medium ${
                 sendType === 'main'
                   ? 'bg-blue-500 rounded-full text-white font-normal'
-                  : 'bg-gray-300 rounded-full'
+                  : ' rounded-full'
               }`}
-              onClick={() => toggleOperationType('manual')}
+              onClick={() => toggleOperationType('main')}
             >
               Main Net
             </div>
@@ -163,15 +159,21 @@ const GasStationIndex = () => {
               className={`px-16 py-3 font-medium ${
                 sendType !== 'main'
                   ? 'bg-blue-500 rounded-full text-white font-normal'
-                  : 'bg-gray-200 rounded-full'
+                  : ' rounded-full'
               }`}
-              onClick={() => toggleOperationType('upload')}
+              onClick={() => toggleOperationType('test')}
             >
               Test Net
             </div>
           </div>
         </div>
       </div>
+      {sendType === 'main' ? (
+        <MainNet supportChains={supportChains}></MainNet>
+      ) : (
+        <TestNet supportChains={supportChains}></TestNet>
+      )}
+
       <Footer></Footer>
     </>
   )

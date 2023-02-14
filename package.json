@@ -18,6 +18,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-use-file-upload": "^0.9.5",
+    "styled-components": "^5.3.6",
     "usehooks-ts": "^2.9.1",
     "wagmi": "^0.11.2"
   },
@@ -26,6 +27,7 @@
     "@types/node": "18.11.3",
     "@types/react": "18.0.21",
     "@types/react-dom": "18.0.6",
+    "@types/styled-components": "^5.1.26",
     "autoprefixer": "^10.4.12",
     "eslint": "8.31.0",
     "eslint-config-next": "13.1.2",
