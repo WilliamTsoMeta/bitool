@@ -9,7 +9,7 @@ import {
   avalancheFuji,
   bscTestnet,
 } from 'wagmi/chains'
-import { useReducer } from 'react'
+import { useReducer, useEffect } from 'react'
 import { publicProvider } from 'wagmi/providers/public'
 // import { avalanche } from 'config/OwnChains' // custom chain
 import Context from 'context/Context'
@@ -42,6 +42,19 @@ function reducer(state: ContextType, action: { type: string; payload: any }) {
 function MyApp({ Component, pageProps }: AppProps) {
   const initState = { alert: { type: 'error', message: '', show: false } }
   const [state, setContext] = useReducer(reducer, initState as ContextType)
+  useEffect(() => {
+    if (state.alert.show) {
+      setTimeout(() => {
+        setContext({
+          type: 'SET_ALERT',
+          payload: {
+            show: false,
+          },
+        })
+      }, 3000)
+    }
+  }, [state.alert.show])
+
   return (
     <>
       <WagmiConfig client={client}>
@@ -53,7 +66,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
           {state.alert.show ? (
             <div className="fixed cursor-pointer top-20 right-2">
-              <div className="shadow-lg alert alert-error">
+              <div className={`shadow-lg alert ${state.alert.type}`}>
                 <div
                   onClick={() => {
                     setContext({ type: 'SET_ALERT', payload: { show: false } })

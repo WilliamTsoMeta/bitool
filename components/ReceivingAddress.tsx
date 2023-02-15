@@ -105,7 +105,7 @@ export default function ReceivingAddress() {
         setContext({
           type: 'SET_ALERT',
           payload: {
-            type: 'error',
+            type: 'alert-error',
             message: 'Please check you sheet',
             show: true,
           },
@@ -116,7 +116,7 @@ export default function ReceivingAddress() {
       setContext({
         type: 'SET_ALERT',
         payload: {
-          type: 'error',
+          type: 'alert-error',
           message: 'Please check you sheet',
           show: true,
         },

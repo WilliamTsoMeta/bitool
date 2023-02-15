@@ -16,6 +16,9 @@ import Link from 'next/link'
 import multiSenderABI from 'abi/multiSender.json'
 import { getContract } from '@wagmi/core'
 import { IJsonRPCError } from 'types'
+import Context from 'context/Context'
+import { chunk } from 'lodash'
+import { array } from 'is'
 
 export default function Step2() {
   const batchTokenData = useContext(BatchTokenContext)
@@ -30,6 +33,7 @@ export default function Step2() {
   const { data: signer } = useSigner()
   const [tokenContract, settokenContract] = useState({} as any)
   const [progress, setprogress] = useState('processing')
+  const { setContext } = useContext(Context)
   const [progressErrorMsg, setprogressErrorMsg] = useState(
     'Some of your transfer transactions failed, please contact customer service to resolve.'
   )
@@ -173,7 +177,49 @@ export default function Step2() {
     setBatchTokenData({ type: 'UPDATE_STEP', payload: 1 })
   }
 
-  const batchSend = async () => {
+  const preBatchSend = async () => {
+    try {
+      let res = false
+      if (batchTokenData.parsedAddress.length > 100) {
+        setContext({
+          type: 'SET_ALERT',
+          payload: {
+            type: 'alert-warning',
+            message: 'Sender will invoke many times due to too many addresses',
+            show: true,
+          },
+        })
+
+        const chunkedAddr = chunk(batchTokenData.parsedAddress, 100)
+        console.log('chunkedAddr', chunkedAddr)
+
+        for (let index = 0; index < chunkedAddr.length; index++) {
+          const addrs = chunkedAddr[index]
+          let end = false
+          if (batchTokenData.parsedAddress.length === index + 1) {
+            end = true
+          }
+          res = await batchSend(addrs, 'chunked', end)
+          if (!res) {
+            break
+          }
+        }
+      } else {
+        res = await batchSend(batchTokenData.parsedAddress, 'direct')
+      }
+      if (res) {
+        setBatchTokenData({ type: 'UPDATE_STEP', payload: 3 })
+      }
+    } catch (error) {
+      console.log('error', error)
+    }
+  }
+
+  const batchSend = async (
+    addresses: string[][],
+    type: string,
+    end?: boolean
+  ) => {
     if (contract) {
       let txn
       let result
@@ -181,7 +227,7 @@ export default function Step2() {
         let addr: string[] = []
         let amn: string[] = []
         let sum: number = 0
-        batchTokenData.parsedAddress.map((value) => {
+        addresses.map((value) => {
           addr.push(value[0])
           sum += Number(value[1])
           amn.push(
@@ -210,9 +256,17 @@ export default function Step2() {
             .sendMultiERC20(batchTokenData.tokenAddress, addr, amn)
           result = await txn.wait()
         }
+
+        // if ((type === 'chunked' && end) || type === 'direct') {
         console.log('txn', txn)
-        setBatchTokenData({ type: 'UPDATE_TXN', payload: txn.hash })
-        setBatchTokenData({ type: 'UPDATE_STEP', payload: 3 })
+
+        const txns = batchTokenData.txn
+        txns.push(txn.hash)
+        console.log('batchTokenData.txn', txns)
+        setBatchTokenData({ type: 'UPDATE_TXN', payload: txns })
+        // }
+
+        return true
       } catch (error: unknown) {
         setprogress('error')
         const e = error as IJsonRPCError
@@ -225,8 +279,10 @@ export default function Step2() {
           }
         }
         console.log('send err', e.message, e.code, e.data)
+        return false
       }
     }
+    return false
   }
 
   const removeAddr = (index: number) => {
@@ -335,7 +391,7 @@ export default function Step2() {
               {approved && (
                 <button
                   className="w-40 ml-5 bg-black border-gray-300 btn rounded-2xl"
-                  onClick={batchSend}
+                  onClick={preBatchSend}
                 >
                   Send
                 </button>

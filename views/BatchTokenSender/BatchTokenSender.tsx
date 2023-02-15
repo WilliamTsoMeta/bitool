@@ -201,7 +201,7 @@ export default function BatchTokenSender() {
         ],
       },
     ],
-    txn: '',
+    txn: [] as Array<string>,
   } as BatchTokenContextType)
 
   return (
