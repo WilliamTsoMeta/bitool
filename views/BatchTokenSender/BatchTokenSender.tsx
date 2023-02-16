@@ -177,18 +177,6 @@ export default function BatchTokenSender() {
         ],
       },
       {
-        id: 1337,
-        name: 'Geth Testnet',
-        token: 'ETH',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'ETH',
-            value: 'ETH',
-          },
-        ],
-      },
-      {
         id: 66,
         name: 'OKC',
         token: 'OKT',

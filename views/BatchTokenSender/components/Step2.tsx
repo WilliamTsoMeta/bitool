@@ -7,7 +7,7 @@ import {
   useProvider,
   useSigner,
 } from 'wagmi'
-import { BigNumber, Contract, ethers } from 'ethers'
+import { BigNumber, BigNumberish, Contract, ethers } from 'ethers'
 import { formatUnits } from 'ethers/lib/utils.js'
 import { erc20ABI } from 'wagmi'
 import { BatchTokenContract } from 'config/Contracts'
@@ -17,14 +17,14 @@ import multiSenderABI from 'abi/multiSender.json'
 import { getContract } from '@wagmi/core'
 import { IJsonRPCError } from 'types'
 import Context from 'context/Context'
-import { chunk } from 'lodash'
-import { array } from 'is'
+import { chunk, clone } from 'lodash'
 
 export default function Step2() {
   const batchTokenData = useContext(BatchTokenContext)
   const { sendType, setBatchTokenData } = useContext(BatchTokenContext)
   const [totalToken, settotalToken] = useState(0)
   const [estimateGas, setestimateGas] = useState('')
+  const [estimateGasOrg, setestimateGasOrg] = useState([] as any)
   const { data: gasFee, isError, isLoading } = useFeeData()
   const [approved, setapproved] = useState(true)
   const { address: walletAddr, isConnecting, isDisconnected } = useAccount()
@@ -51,14 +51,20 @@ export default function Step2() {
         settotalToken(total)
 
         getEstimation(contract).then((estimation) => {
-          if (gasFee && !isNaN(estimation)) {
-            let gasPrice = BigNumber.from(gasFee?.formatted.gasPrice)
+          if (gasFee?.gasPrice && estimation) {
+            console.log('gasFee', gasFee)
+            let gasPrice = BigNumber.from(gasFee?.gasPrice)
             let estmationB = BigNumber.from(estimation)
 
             setestimateGas(
               formatUnits(gasPrice.mul(estmationB).toString(), 'ether')
             )
-            console.log('fee', gasPrice.mul(estmationB).toString())
+            console.log(
+              'fee---',
+              gasPrice.mul(estmationB).toString(),
+              'gasarr',
+              estimateGasOrg
+            )
           }
         })
       }
@@ -79,50 +85,82 @@ export default function Step2() {
     console.log('contract', contract)
   }, [batchTokenData.contractAddress])
 
+  const caculateGas = async (addrs: string[][]) => {
+    let addr: string[] = []
+    let amn: string[] = []
+    let sum: number = 0
+
+    addrs.map((value) => {
+      addr.push(value[0])
+      sum += Number(value[1])
+      amn.push(
+        ethers.utils
+          .parseUnits(value[1], batchTokenData.tokenDecimals)
+          .toString()
+      )
+    })
+
+    if (
+      batchTokenData.unit === batchTokenData.gasUnit &&
+      batchTokenData.tokenDecimals
+    ) {
+      console.log('batchTokenData.tokenDecimals', batchTokenData.tokenDecimals)
+      // platform token
+      let sumAmn = ethers.utils.parseUnits(
+        sum.toFixed(4),
+        batchTokenData.tokenDecimals
+      )
+      const rawGasEstimation = await contract
+        ?.connect(signer as any)
+        .estimateGas.sendMultiETH(addr, amn, {
+          value: sumAmn,
+        })
+      return BigNumber.from(rawGasEstimation)
+    } else {
+      // wildcard token
+      if (batchTokenData.tokenAddress) {
+        const rawGasEstimation = await contract
+          ?.connect(signer as any)
+          .estimateGas.sendMultiERC20(batchTokenData.tokenAddress, addr, amn)
+        return BigNumber.from(rawGasEstimation)
+      }
+    }
+    return 0
+  }
+
   const getEstimation = async (contract: any) => {
     if (contract.estimateGas) {
       try {
-        let addr: string[] = []
-        let amn: string[] = []
-        let sum: number = 0
-        batchTokenData.parsedAddress.map((value) => {
-          addr.push(value[0])
-          sum += Number(value[1])
-          amn.push(
-            ethers.utils
-              .parseUnits(value[1], batchTokenData.tokenDecimals)
-              .toString()
-          )
-        })
+        let chunkedAddr = chunk(batchTokenData.parsedAddress, 100)
+        let totoalEstimation = BigNumber.from(0)
+        let gasArr = []
 
-        if (batchTokenData.unit === batchTokenData.gasUnit) {
-          // platform token
-          let sumAmn = ethers.utils.parseUnits(
-            sum.toFixed(4),
-            batchTokenData.tokenDecimals
-          )
-          const rawGasEstimation = await contract
-            ?.connect(signer as any)
-            .estimateGas.sendMultiETH(addr, amn, {
-              value: sumAmn,
-            })
-          return rawGasEstimation
-        } else {
-          // wildcard token
-          if (batchTokenData.tokenAddress) {
-            const rawGasEstimation = await contract
-              ?.connect(signer as any)
-              .estimateGas.sendMultiERC20(
-                batchTokenData.tokenAddress,
-                addr,
-                amn
-              )
-            return rawGasEstimation
+        for (let index = 0; index < chunkedAddr.length; index++) {
+          const addrs = chunkedAddr[index]
+          const gas = await caculateGas(addrs)
+          gasArr.push(gas)
+          if (gas === 0) {
+            throw new Error('Gas calculate error')
           }
+          totoalEstimation = totoalEstimation.add(gas) // totoalEstimation += gas
         }
-      } catch (error: unknown) {
+        console.log('gasArr', gasArr)
+        setestimateGasOrg(gasArr)
+        return totoalEstimation
+      } catch (error: any) {
         console.log('estttttt err', error)
-        return 999999
+        setprogress('error')
+        if (
+          error.message.indexOf('cannot estimate gas') >= 0 ||
+          error.message.indexOf('invalid decimal value')
+        ) {
+          setprogressErrorMsg(
+            'Please set a reasonable amount or Check your wallet funds. Cannot estimate gas. transaction may fail or may require manual gas limit.'
+          )
+        }
+        if (error?.data?.message?.indexOf('insufficient funds') >= 0) {
+          setprogressErrorMsg('Insufficient funds')
+        }
       }
     }
   }
@@ -199,13 +237,13 @@ export default function Step2() {
           if (batchTokenData.parsedAddress.length === index + 1) {
             end = true
           }
-          res = await batchSend(addrs, 'chunked', end)
+          res = await batchSend(addrs, index)
           if (!res) {
             break
           }
         }
       } else {
-        res = await batchSend(batchTokenData.parsedAddress, 'direct')
+        res = await batchSend(batchTokenData.parsedAddress, 0)
       }
       if (res) {
         setBatchTokenData({ type: 'UPDATE_STEP', payload: 3 })
@@ -215,12 +253,9 @@ export default function Step2() {
     }
   }
 
-  const batchSend = async (
-    addresses: string[][],
-    type: string,
-    end?: boolean
-  ) => {
-    if (contract) {
+  const batchSend = async (addresses: string[][], index: number) => {
+    console.log('estimateGasOrg', estimateGasOrg)
+    if (contract && estimateGasOrg.length > 0) {
       let txn
       let result
       try {
@@ -247,24 +282,29 @@ export default function Step2() {
 
           txn = await contract?.connect(signer as any).sendMultiETH(addr, amn, {
             value: sumAmn,
+            gasLimit: estimateGasOrg[index],
+            maxFeePerGas: gasFee?.maxFeePerGas,
+            maxPriorityFeePerGas: gasFee?.maxPriorityFeePerGas,
           })
           result = await txn.wait()
         } else {
           // wildcard token
           txn = await contract
             ?.connect(signer as any)
-            .sendMultiERC20(batchTokenData.tokenAddress, addr, amn)
+            .sendMultiERC20(batchTokenData.tokenAddress, addr, amn, {
+              gasLimit: estimateGasOrg[index],
+              maxFeePerGas: gasFee?.maxFeePerGas,
+              maxPriorityFeePerGas: gasFee?.maxPriorityFeePerGas,
+            })
           result = await txn.wait()
         }
 
-        // if ((type === 'chunked' && end) || type === 'direct') {
         console.log('txn', txn)
 
         const txns = batchTokenData.txn
         txns.push(txn.hash)
         console.log('batchTokenData.txn', txns)
         setBatchTokenData({ type: 'UPDATE_TXN', payload: txns })
-        // }
 
         return true
       } catch (error: unknown) {
@@ -388,7 +428,7 @@ export default function Step2() {
                   Approve
                 </button>
               )}
-              {approved && (
+              {approved && estimateGas && (
                 <button
                   className="w-40 ml-5 bg-black border-gray-300 btn rounded-2xl"
                   onClick={preBatchSend}
@@ -416,7 +456,9 @@ export default function Step2() {
                 alt="error"
                 className="mt-20 mb-14"
               />
-              <p className="mb-20 font-bold">{progressErrorMsg}</p>
+              <p className="w-full px-3 mb-20 font-bold text-center">
+                {progressErrorMsg}
+              </p>
 
               <div className="grid w-11/12 grid-cols-2 gap-5">
                 <button
