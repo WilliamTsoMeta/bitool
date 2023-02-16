@@ -7,6 +7,7 @@ import Image from 'next/image'
 interface Props {
   supportChains: supportChainsType[]
   defaultChain: supportChainsType
+  onChainChange: Function
 }
 export default function SelectChain(props: Props) {
   const { Option } = Select
@@ -50,7 +51,7 @@ export default function SelectChain(props: Props) {
       <GlobalStyle></GlobalStyle>
       <div className={`chooseChain`}>
         {
-          <Select defaultValue={currentChain.name} onChange={chainChange}>
+          <Select defaultValue={props.defaultChain.name} onChange={chainChange}>
             {props.supportChains.map((chain) => {
               return (
                 <Option value={chain.name} label={chain.name} key={chain.id}>

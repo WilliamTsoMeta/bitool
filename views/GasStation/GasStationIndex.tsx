@@ -23,6 +23,7 @@ const GasStationIndex = () => {
           value: '12312312',
         },
       ],
+      staableCoinAddr: '0xfDD6Db3Afd662aFDD5ad35C15fE47B81B8b11532',
     },
     {
       id: 97,
@@ -35,6 +36,7 @@ const GasStationIndex = () => {
           value: 'BNB',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 1,
@@ -47,6 +49,7 @@ const GasStationIndex = () => {
           value: 'ETH',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 137,
@@ -59,6 +62,7 @@ const GasStationIndex = () => {
           value: 'MATIC',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 42161,
@@ -71,6 +75,7 @@ const GasStationIndex = () => {
           value: 'ETH',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 10,
@@ -83,6 +88,7 @@ const GasStationIndex = () => {
           value: 'ETH',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 250,
@@ -95,6 +101,7 @@ const GasStationIndex = () => {
           value: 'FTM',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 1337,
@@ -107,6 +114,7 @@ const GasStationIndex = () => {
           value: 'ETH',
         },
       ],
+      staableCoinAddr: '',
     },
     {
       id: 66,
@@ -119,6 +127,7 @@ const GasStationIndex = () => {
           value: 'OKT',
         },
       ],
+      staableCoinAddr: '',
     },
   ])
 
