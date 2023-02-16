@@ -12,7 +12,10 @@ export function TestNet({ supportChains }: MainNetProps) {
     <>
       <div className="container max-w-2xl mx-auto mt-10 mb-96">
         <div className="grid grid-cols-2 gap-4">
-          <SelectChain supportChains={supportChains}></SelectChain>
+          <SelectChain
+            supportChains={supportChains}
+            defaultChain={supportChains[0]}
+          ></SelectChain>
           <div className="flex items-center pl-3 border border-gray-200 rounded">
             <Image
               src={`/images/coins/USDT.webp`}

@@ -131,7 +131,7 @@ const GasStationIndex = () => {
       <Header></Header>
       <div className={`banner lg:px-0`}>
         <div className="container flex flex-col items-center mx-auto mt-16">
-          <h2 className="mt-12 text-5xl font-bold">Token batch sender</h2>
+          <h2 className="mt-12 text-5xl font-bold">Gas Station</h2>
           <p className="mt-11 mb-7">Chain Supported</p>
           <div className="flex w-4/6 mb-14 justify-evenly">
             {supportChains.map((chain) => (

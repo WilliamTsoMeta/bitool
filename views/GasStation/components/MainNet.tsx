@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useContext, useMemo } from 'react'
 import SelectChain from 'components/SelectChain'
 import Image from 'next/image'
 import { supportChainsType } from 'types'
-import { useBalance } from 'wagmi'
+import { useBalance, useConnect } from 'wagmi'
 
 export interface MainNetProps {
   supportChains: supportChainsType[]
@@ -10,6 +10,7 @@ export interface MainNetProps {
 
 export function MainNet({ supportChains }: MainNetProps) {
   const { data } = useBalance()
+  const { isConnected } = useConnect()
   useEffect(() => {
     console.log('balance', data)
   }, [data])
@@ -53,7 +54,7 @@ export function MainNet({ supportChains }: MainNetProps) {
         </div>
         <div className="flex mt-3 font-bold">
           <div>
-            Your balance{' '}
+            Your balance
             <span className="text-blue-500">
               {/* {balance?.formatted} {balance?.symbol} */}
             </span>
