@@ -1,10 +1,11 @@
 import React, { useRef, useState, useEffect, useContext, useMemo } from 'react'
 import SelectChain from 'components/SelectChain'
 import Image from 'next/image'
-import { supportChainsType } from 'types'
+import { supportChainType } from 'types'
+import { Chain } from 'wagmi'
 
 export interface MainNetProps {
-  supportChains: supportChainsType[]
+  supportChains: Chain[]
 }
 
 export function TestNet({ supportChains }: MainNetProps) {
@@ -12,10 +13,10 @@ export function TestNet({ supportChains }: MainNetProps) {
     <>
       <div className="container max-w-2xl mx-auto mt-10 mb-96">
         <div className="grid grid-cols-2 gap-4">
-          <SelectChain
+          {/* <SelectChain
             supportChains={supportChains}
             defaultChain={supportChains[0]}
-          ></SelectChain>
+          ></SelectChain> */}
           <div className="flex items-center pl-3 border border-gray-200 rounded">
             <Image
               src={`/images/coins/USDT.webp`}

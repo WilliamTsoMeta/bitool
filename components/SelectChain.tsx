@@ -1,16 +1,37 @@
 import { Select, Space } from 'antd'
 import { createGlobalStyle } from 'styled-components'
-import { useState } from 'react'
-import { supportChainsType } from 'types'
+import { useState, useContext, useEffect } from 'react'
+import { supportChainType } from 'types'
 import Image from 'next/image'
+import {
+  useNetwork,
+  useSwitchNetwork,
+  useBalance,
+  useAccount,
+  useConnect,
+  Chain,
+} from 'wagmi'
+
+import Context from 'context/Context'
 
 interface Props {
-  supportChains: supportChainsType[]
-  defaultChain: supportChainsType
+  supportChains: Chain[]
+  defaultChain: Chain
   onChainChange: Function
+  invokeWallet?: boolean
 }
 export default function SelectChain(props: Props) {
+  const { setContext } = useContext(Context)
   const { Option } = Select
+  const { chain, chains } = useNetwork()
+  const {
+    chains: chaissw,
+    error,
+    pendingChainId,
+    switchNetwork,
+    switchNetworkAsync,
+  } = useSwitchNetwork()
+
   const GlobalStyle = createGlobalStyle`
     .chooseChain {
       /* .ant-select{
@@ -34,43 +55,59 @@ export default function SelectChain(props: Props) {
   `
   const [currentChain, setcurrentChain] = useState(props.defaultChain)
 
-  function chainChange(value: string) {
-    // if (!isDisconnected) {
-    //   connect()
-    // }
-    console.log('value', value)
-    const chain = props.supportChains.filter(
-      (chain: supportChainsType) => chain.name === value
-    )
-    setcurrentChain(chain[0])
-    // url param will changed after wallet chain changed
+  async function chainChange(value: string) {
+    try {
+      const selectChain = props.supportChains.filter(
+        (chain: Chain) => chain.name === value
+      )
+      // url param will changed after wallet chain changed
+      if (props.invokeWallet && selectChain[0].id !== chain?.id) {
+        await switchNetworkAsync?.(selectChain[0].id)
+      }
+      setcurrentChain(selectChain[0])
+      props.onChainChange(selectChain[0])
+    } catch (error) {
+      setContext({
+        type: 'SET_ALERT',
+        payload: {
+          type: 'error',
+          message: 'User reject switch network',
+          show: true,
+        },
+      })
+    }
   }
 
   return (
-    <>
+    <div className="w-full">
       <GlobalStyle></GlobalStyle>
       <div className={`chooseChain`}>
         {
-          <Select defaultValue={props.defaultChain.name} onChange={chainChange}>
+          <Select onChange={chainChange} value={currentChain.name}>
             {props.supportChains.map((chain) => {
+              let name = ''
               return (
                 <Option value={chain.name} label={chain.name} key={chain.id}>
-                  <Space>
+                  <div className="flex items-center h-11">
                     <Image
-                      src={`/images/support_chains/${chain.name}.png`}
+                      src={`/images/support_chains/${chain.id}.png`}
                       width={28}
                       height={28}
                       alt="chain"
                       className="mr-3 h-7 w-7"
                     ></Image>
-                    {chain.name}
-                  </Space>
+                    <span className="">
+                      {/* {chain.name.slice(0, 15)} */}
+                      {/* {chain.name.length > 15 ? '...' : ''} */}
+                      {chain.name}
+                    </span>
+                  </div>
                 </Option>
               )
             })}
           </Select>
         }
       </div>
-    </>
+    </div>
   )
 }

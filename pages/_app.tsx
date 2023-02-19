@@ -2,27 +2,26 @@ import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { configureChains, createClient, WagmiConfig } from 'wagmi'
-import {
-  avalanche,
-  bsc,
-  mainnet,
-  avalancheFuji,
-  bscTestnet,
-} from 'wagmi/chains'
 import { useReducer } from 'react'
 import { publicProvider } from 'wagmi/providers/public'
 // import { avalanche } from 'config/OwnChains' // custom chain
 import Context from 'context/Context'
 import { ContextType } from 'types'
+import { InjectedConnector } from 'wagmi/connectors/injected'
+import getSupportChains from 'util/SupportChains'
+import { Chain } from 'wagmi'
 
-const chainArr = [avalancheFuji, bscTestnet]
-const { chains, provider, webSocketProvider } = configureChains(chainArr, [
-  publicProvider(),
-])
+const chainArr = getSupportChains()
+
+const { chains, provider, webSocketProvider } = configureChains(
+  chainArr as Chain[],
+  [publicProvider()]
+)
 
 const client = createClient({
   autoConnect: true,
   provider,
+  connectors: [new InjectedConnector({ chains })],
   webSocketProvider,
 })
 
@@ -79,7 +78,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           ) : (
             <div></div>
           )}
-          <Component {...pageProps} />
+          {chains && <Component {...pageProps} />}
         </Context.Provider>
       </WagmiConfig>
     </>

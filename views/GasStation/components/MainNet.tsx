@@ -1,66 +1,311 @@
-import React, { useRef, useState, useEffect, useContext, useMemo } from 'react'
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useContext,
+  useMemo,
+  ReactEventHandler,
+  ChangeEventHandler,
+} from 'react'
 import SelectChain from 'components/SelectChain'
 import Image from 'next/image'
-import { supportChainsType } from 'types'
-import { useBalance, useConnect, useAccount } from 'wagmi'
+import { supportChainType, contractInfosType, contractInfoType } from 'types'
+import { useBalance, useConnect, useAccount, Chain, useNetwork } from 'wagmi'
 import ConnectBtn from 'components/ConnectBtn'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { fetchBalance } from '@wagmi/core'
-
+import { clone } from 'lodash'
+import { getContract } from '@wagmi/core'
+import gasStation from 'abi/gasStation.json'
+import swapRouterABI from 'abi/swapRouter.json'
+import { useSigner, useProvider } from 'wagmi'
+import useAllowance from 'hooks/useAllowance'
+import { erc20ABI } from 'wagmi'
+import { parseUnits } from 'ethers/lib/utils.js'
 export interface MainNetProps {
-  supportChains: supportChainsType[]
+  gasStationContractInfo: contractInfosType
 }
 
-export function MainNet({ supportChains }: MainNetProps) {
+export function MainNet({ gasStationContractInfo }: MainNetProps) {
   const {
     address: userAddress,
     connector: activeConnector,
     isConnected,
   } = useAccount()
+  const { chain, chains } = useNetwork()
   const { connect, connectors, error, isLoading, pendingConnector } =
     useConnect({ connector: new InjectedConnector() })
 
   const [balance, setbalance] = useState({ formatted: '', symbol: '' })
+  const [connected, setconnected] = useState(false)
+  const [receiverInfo, setreceiverInfo] = useState({
+    chain: {} as Chain,
+    amount: 0, //usdt
+    address: '',
+  })
+
+  const { data: signer } = useSigner()
+  useAccount
+  const provider = useProvider()
+  const [gasStationContract, setgasStationContract] = useState({} as any)
+  const [swapRouterContract, setswapRouterContract] = useState({} as any)
+  const [chainW, setchainW] = useState({} as Chain)
+  const [chainsW, setchainsW] = useState([] as Chain[])
+  const [payChain, setpayChain] = useState({} as Chain)
+  const [getTokenCount, setgetTokenCount] = useState('0')
+  const [tokenLoading, settokenLoading] = useState(false)
+  const [tokenSymbol, settokenSymbol] = useState('')
+  const [timer, settimer] = useState({} as any)
+  const [paying, setpaying] = useState(false)
+  const fetchErc20Allowance = useAllowance()
+  const [allowance, setallowance] = useState(0)
 
   useEffect(() => {
-    userAddress &&
+    isConnected && setconnected(isConnected)
+  }, [isConnected])
+
+  useEffect(() => {
+    chains && setchainsW(chains)
+    console.log('chains', chains)
+    if (chain) {
+      if (!receiverInfo.chain.id) {
+        setreceiverInfo({ ...receiverInfo, chain })
+      }
+      setchainW(chain)
+      setpayChain(chain)
+    }
+  }, [chain, chains, receiverInfo])
+
+  useEffect(() => {
+    payChain.id &&
+      userAddress &&
+      gasStationContractInfo[payChain.id].staableCoin?.address &&
       fetchBalance({
         address: userAddress as any,
-        token: '0xfDD6Db3Afd662aFDD5ad35C15fE47B81B8b11532',
+        token: gasStationContractInfo[payChain.id].staableCoin?.address as any,
       }).then((balance) => {
-        console.log('balance', setbalance(balance))
+        setbalance(balance)
       })
-  }, [userAddress])
+  }, [userAddress, gasStationContractInfo, payChain?.id, chainW?.id])
+
+  useEffect(() => {
+    const contactInfo = gasStationContractInfo[payChain.id]
+    if (contactInfo && signer) {
+      // get allowance
+      fetchErc20Allowance(
+        contactInfo.staableCoin.address,
+        contactInfo.contractAddress,
+        userAddress as `0x${string}`,
+        signer
+      ).then((allowance) => {
+        setallowance(allowance)
+      })
+    }
+  }, [gasStationContractInfo, payChain.id, signer, userAddress])
+
+  // ANCHOR get contracts
+  useEffect(() => {
+    if (
+      payChain.id &&
+      signer &&
+      gasStationContractInfo[payChain.id].contractAddress
+    ) {
+      const gasStationContract = getContract({
+        address: gasStationContractInfo[payChain.id].contractAddress,
+        abi: gasStation,
+        signerOrProvider: signer,
+      })
+      setgasStationContract(gasStationContract)
+
+      const getTokenAmn = getContract({
+        address:
+          gasStationContractInfo[receiverInfo.chain.id].swaprouterContract,
+        abi: swapRouterABI,
+        signerOrProvider: signer,
+      })
+      setswapRouterContract(getTokenAmn)
+    }
+  }, [gasStationContractInfo, signer, payChain.id, receiverInfo.chain.id])
+
+  const receivingChainChange = (chain: Chain) => {
+    console.log('e', chain)
+    const receiver = clone(receiverInfo)
+    receiver.chain = chain
+    setreceiverInfo(receiver)
+    settokenSymbol(chain?.nativeCurrency?.symbol)
+  }
+
+  const paymentChainChange = (chain: Chain) => {
+    // setreceiverInfo({ ...receiverInfo, chain })
+    setpayChain(chain)
+  }
+
+  const calcalNativeCurrency = async (amount: number) => {
+    let toWei = 1e18
+    switch (receiverInfo.chain.nativeCurrency.decimals) {
+      case 6:
+        toWei = 1e6
+        break
+    }
+    const nativeCurrencyAmn = await swapRouterContract.getAmountsOut(
+      amount * toWei,
+      [
+        gasStationContractInfo[receiverInfo.chain.id].staableCoin?.address,
+        gasStationContractInfo[receiverInfo.chain.id].WToken?.address,
+      ]
+    )
+    return nativeCurrencyAmn
+  }
+
+  const receiveAmnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.validity.valid) {
+      const amount = Number(e.target.value)
+      setreceiverInfo({ ...receiverInfo, amount })
+      settokenLoading(true)
+      clearTimeout(timer)
+      const timerLocal = setTimeout(async () => {
+        try {
+          const curNum = await calcalNativeCurrency(amount)
+          setgetTokenCount(curNum)
+        } catch (error) {
+          console.log('receiveAmnChange error', error)
+          setgetTokenCount(amount.toString())
+        }
+        settokenLoading(false)
+      }, 1000)
+      settimer(timerLocal)
+    } else {
+      setgetTokenCount('0')
+    }
+  }
+
+  const receiveAddrChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setreceiverInfo({ ...receiverInfo, address: e.target.value })
+  }
+
+  const receiveAmnFocus = () => {
+    setreceiverInfo({ ...receiverInfo, amount: 0 })
+    setgetTokenCount('0')
+  }
+
+  const swap = async () => {
+    setpaying(true)
+    let toWei = 1e18
+    switch (receiverInfo.chain.nativeCurrency.decimals) {
+      case 6:
+        toWei = 1e6
+        break
+    }
+    let amount = receiverInfo.amount * toWei
+    if (amount.toString() && receiverInfo.chain.id && receiverInfo.address) {
+      const txn = await gasStationContract.deposit(
+        amount.toString(),
+        receiverInfo.chain.id,
+        receiverInfo.address
+      )
+
+      setInterval(async () => {
+        const result = await gasStationContract.state(
+          receiverInfo.chain.id,
+          txn.hash
+        )
+        console.log('result', result)
+        if (result) {
+          console.log('result', result)
+          setpaying(false)
+        }
+      }, 2000)
+    } else {
+      console.log('pay error 填错了')
+    }
+  }
+
+  const approve = async () => {
+    try {
+      if (signer) {
+        const tokenContract = getContract({
+          address: gasStationContractInfo[payChain.id].staableCoin?.address,
+          abi: erc20ABI,
+          signerOrProvider: signer,
+        })
+
+        let ap = await tokenContract
+          ?.connect(signer)
+          .approve(
+            gasStationContractInfo[payChain.id].contractAddress,
+            parseUnits('20000000', payChain.nativeCurrency.decimals)
+          )
+        ap.wait()
+        setallowance(20000000)
+      }
+    } catch (error) {
+      console.log('approve error', error)
+    }
+  }
 
   return (
     <>
       <div className="container max-w-2xl mx-auto mt-10 mb-96">
-        <div className="grid grid-cols-3 gap-4">
-          <SelectChain
-            supportChains={supportChains}
-            defaultChain={supportChains[0]}
-            key="receiver"
-          ></SelectChain>
-          <input
-            type="text"
-            name="sendNum"
-            className="col-span-2 pl-2 text-gray-400 border border-gray-300 rounded"
-            placeholder="0.01"
-          />
+        <p className="my-2 font-semibold">What kind of gas do you want?</p>
+        <div className="flex w-full">
+          {chainW && chainsW.length > 0 && (
+            <SelectChain
+              supportChains={chainsW}
+              defaultChain={chainW}
+              key="receiver"
+              onChainChange={receivingChainChange}
+            ></SelectChain>
+          )}
+        </div>
+        <p className="my-2 font-semibold">How much you want to buy?</p>
+        <div className="flex w-full">
+          <div className="flex items-center pl-2 text-black border border-gray-300 rounded">
+            <span className="mr-1 text-xl font-semibold">$</span>
+            <input
+              type="text"
+              name="sendNum"
+              className="h-12 "
+              placeholder="1"
+              onChange={receiveAmnChange}
+              value={receiverInfo.amount}
+              onFocus={receiveAmnFocus}
+              pattern="[0-9]*"
+            />
+          </div>
+
+          <div className="flex items-center justify-center mx-5">For</div>
+          <div className="flex items-center w-full px-3 border border-gray-200 rounded">
+            {tokenLoading ? (
+              <button className="text-black bg-white border-0 btn btn-square loading"></button>
+            ) : (
+              getTokenCount
+            )}{' '}
+            {tokenSymbol === '' ? chainW?.nativeCurrency?.symbol : tokenSymbol}
+          </div>
         </div>
         <input
           type="text"
           name="receiveAddress"
-          className="w-full h-12 col-span-2 pl-2 mt-5 text-gray-400 border border-gray-300 rounded"
+          className="w-full h-12 col-span-2 pl-2 mt-5 text-black border border-gray-300 rounded"
           placeholder="Receiving Address"
+          onChange={receiveAddrChange}
+          value={receiverInfo.address}
+          onFocus={() => {
+            setreceiverInfo({ ...receiverInfo, address: '' })
+          }}
         />
         <h4 className="text-xl font-bold text-center my-7">Payment methods</h4>
         <div className="grid grid-cols-2 gap-4">
-          <SelectChain
-            supportChains={supportChains}
-            defaultChain={supportChains[0]}
-            key="payer"
-          ></SelectChain>
+          {chainW && chainsW.length > 0 && (
+            <SelectChain
+              supportChains={chainsW}
+              defaultChain={chainW}
+              onChainChange={paymentChainChange}
+              invokeWallet={true}
+              key="payer"
+            ></SelectChain>
+          )}
+
           <div className="flex items-center pl-3 border border-gray-200 rounded">
             <Image
               src={`/images/coins/USDT.webp`}
@@ -82,13 +327,31 @@ export function MainNet({ supportChains }: MainNetProps) {
             Bitool fee <span className="text-green-400">Free</span>
           </div>
         </div>
-        {isConnected ? (
-          <div className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded-lg cursor-pointer">
-            Pay <span className="mx-1"> 111 </span> USDT
-          </div>
-        ) : (
+        {/* allowance > 2  &&  */}
+        {connected &&
+          (paying ? (
+            <button className="w-full text-white bg-black border-0 btn btn-square loading"></button>
+          ) : (
+            <div
+              className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded-lg cursor-pointer"
+              onClick={swap}
+            >
+              Pay <span className="mx-1"> {receiverInfo.amount} </span> USDT
+            </div>
+          ))}
+
+        {/* {connected && allowance <= 2 && (
+          <button
+            className="w-full bg-green-500 border-gray-300 btn rounded-2xl"
+            onClick={approve}
+          >
+            Approve
+          </button>
+        )} */}
+
+        {!connected && (
           <div
-            className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded-lg cursor-pointer"
+            className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded cursor-pointer"
             onClick={() => connect()}
           >
             Connect

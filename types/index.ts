@@ -45,6 +45,11 @@ export interface IJsonRPCError {
   readonly data: any
 }
 
+export interface CoinType {
+  name: string
+  address: string
+}
+
 export interface supportChainsType {
   id: number
   name: string
@@ -56,4 +61,21 @@ export interface supportChainsType {
 export interface tokenOptionTypes {
   label: string
   value?: string
+}
+
+export interface supportChainType {
+  id: number
+  name: string
+  token: string
+}
+
+export interface contractInfoType {
+  contractAddress: `0x${string}`
+  swaprouterContract: string
+  staableCoin: CoinType
+  WToken: CoinType
+}
+
+export interface contractInfosType {
+  [key: number]: contractInfoType
 }
