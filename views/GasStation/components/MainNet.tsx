@@ -159,6 +159,8 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   const paymentChainChange = (chain: Chain) => {
     // setreceiverInfo({ ...receiverInfo, chain })
     setpayChain(chain)
+    setgetTokenCount('0')
+    setreceiverInfo({ ...receiverInfo, amount: 0 })
   }
 
   const calcalNativeCurrency = async (amount: number) => {
@@ -263,6 +265,14 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       console.log('result', result)
       if (result) {
         console.log('result', result)
+        setContext({
+          type: 'SET_ALERT',
+          payload: {
+            type: 'alert-success',
+            message: 'Successed',
+            show: true,
+          },
+        })
         setpaying(false)
         clearInterval(timer)
       }
