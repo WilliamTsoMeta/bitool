@@ -9,9 +9,8 @@ import React, {
 } from 'react'
 import SelectChain from 'components/SelectChain'
 import Image from 'next/image'
-import { supportChainType, contractInfosType, contractInfoType } from 'types'
-import { useBalance, useConnect, useAccount, Chain, useNetwork } from 'wagmi'
-import ConnectBtn from 'components/ConnectBtn'
+import { contractInfosType } from 'types'
+import { useAccount, Chain, useNetwork } from 'wagmi'
 import { fetchBalance } from '@wagmi/core'
 import { clone } from 'lodash'
 import { getContract } from '@wagmi/core'
@@ -21,9 +20,10 @@ import { useSigner, useProvider } from 'wagmi'
 import useAllowance from 'hooks/useAllowance'
 import { erc20ABI } from 'wagmi'
 import { parseUnits, isAddress, formatUnits } from 'ethers/lib/utils.js'
-import { BigNumber } from 'ethers'
+
 import Context from 'context/Context'
-import { format } from 'path'
+import { getProvider } from '@wagmi/core'
+
 // import { useContext, useState, useEffect, useMemo } from 'react'
 
 export interface MainNetProps {
@@ -131,6 +131,8 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       signer &&
       gasStationContractInfo[payChain.id].contractAddress
     ) {
+      const receiVerProvider = getProvider({ chainId: receiverInfo.chain.id })
+
       const gasStationContract = getContract({
         address: gasStationContractInfo[payChain.id].contractAddress,
         abi: gasStation,
@@ -142,7 +144,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
         address:
           gasStationContractInfo[receiverInfo.chain.id].swaprouterContract,
         abi: swapRouterABI,
-        signerOrProvider: signer,
+        signerOrProvider: receiVerProvider,
       })
       setswapRouterContract(getTokenAmn)
     }
