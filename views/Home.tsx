@@ -217,7 +217,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="container grid items-center max-w-6xl gap-10 mx-auto mb-24 align-baseline mt-14 lg:grid-cols-6">
+      {/* <div className="container grid items-center max-w-6xl gap-10 mx-auto mb-24 align-baseline mt-14 lg:grid-cols-6">
         <Image
           src="/images/partsx.webp"
           alt="partener"
@@ -254,7 +254,7 @@ export default function Home() {
           width={168}
           height={40}
         />
-      </div>
+      </div> */}
 
       <Footer></Footer>
     </>

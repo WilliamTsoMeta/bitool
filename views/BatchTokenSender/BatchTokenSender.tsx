@@ -59,6 +59,10 @@ function reducer(
       return { ...state }
     case 'UPDATE_SUPPORT_CHAINS':
       state.supportChains = action.payload
+      return { ...state }
+    case 'UPDATE_TXN':
+      state.txn = action.payload
+      return { ...state }
     default:
       throw new Error('none type fit')
   }
@@ -173,18 +177,6 @@ export default function BatchTokenSender() {
         ],
       },
       {
-        id: 1337,
-        name: 'Geth Testnet',
-        token: 'ETH',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'ETH',
-            value: 'ETH',
-          },
-        ],
-      },
-      {
         id: 66,
         name: 'OKC',
         token: 'OKT',
@@ -197,6 +189,7 @@ export default function BatchTokenSender() {
         ],
       },
     ],
+    txn: [] as Array<string>,
   } as BatchTokenContextType)
 
   return (
