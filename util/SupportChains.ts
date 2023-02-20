@@ -15,5 +15,5 @@ export default function getSupportChains() {
     return chainArrDev
   }
 
-  return chainArr
+  return chainArrDev
 }
