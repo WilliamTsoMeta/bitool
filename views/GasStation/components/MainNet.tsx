@@ -133,8 +133,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       signer &&
       gasStationContractInfo[payChain.id].contractAddress
     ) {
-      const receiVerProvider = getProvider({ chainId: receiverInfo.chain.id })
-
       const gasStationContract = getContract({
         address: gasStationContractInfo[payChain.id].contractAddress,
         abi: gasStation,
@@ -143,35 +141,29 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       setgasStationContract(gasStationContract)
 
       // receiver
-      console.log(
-        'gasStationContractInfo[receiverInfo.chain.id].contractAddress',
-        gasStationContractInfo[receiverInfo.chain.id].contractAddress
-      )
+      console.log('receiver receiverInfo.chain.id', receiverInfo.chain.id)
+      const receiVerProvider = getProvider({ chainId: receiverInfo.chain.id })
       const gasStationReceiverContract = getContract({
         address: gasStationContractInfo[receiverInfo.chain.id].contractAddress,
         abi: gasStation,
         signerOrProvider: receiVerProvider,
       })
-
       setgasStationReceiverContract(gasStationReceiverContract)
 
-      const getTokenAmn = getContract({
+      const swapRouterContract = getContract({
         address:
           gasStationContractInfo[receiverInfo.chain.id].swaprouterContract,
         abi: swapRouterABI,
         signerOrProvider: receiVerProvider,
       })
-      setswapRouterContract(getTokenAmn)
-      // --receiver
+      setswapRouterContract(swapRouterContract)
+      // receiver
     }
-  }, [gasStationContractInfo, signer, payChain.id, receiverInfo])
+  }, [gasStationContractInfo, signer, payChain.id, receiverInfo.chain.id])
 
   const receivingChainChange = (chain: Chain) => {
-    const receiver = clone(receiverInfo)
-    receiver.chain = chain
-    setreceiverInfo(receiver)
     settokenSymbol(chain?.nativeCurrency?.symbol)
-    setreceiverInfo({ ...receiverInfo, amount: 0 })
+    setreceiverInfo({ ...receiverInfo, amount: 0, chain })
     setgetTokenCount('0')
   }
 
@@ -188,6 +180,9 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     const wtokenDecimals =
       gasStationContractInfo[receiverInfo.chain.id].WToken?.decimals
 
+    console.log('receiverInfo.chain.id', receiverInfo.chain.id)
+
+    console.log('swapRouterContract', swapRouterContract.address)
     const nativeCurrencyAmn = await swapRouterContract.getAmountsOut(
       parseUnits(amount.toString(), decimals).toString(),
       [
@@ -244,10 +239,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       message = 'Please check your form, Amount should be $1-$10'
       err = true
     }
-    console.log(
-      'isAddress(receiverInfo.address)',
-      isAddress(receiverInfo.address)
-    )
 
     if (!isAddress(receiverInfo.address)) {
       message = 'Please check your form, Receiving address'
@@ -276,10 +267,21 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     )
 
     let tries = 1
+
     console.log('receiverInfo.chain.id,', receiverInfo.chain.id)
+    console.log(
+      'gasStationReceiverContract.address',
+      gasStationReceiverContract.address,
+      gasStationReceiverContract.provider
+    )
+    console.log(
+      'receiverInfo.chain.id, txn.hash',
+      receiverInfo.chain.id,
+      txn.hash
+    )
     let timer = setInterval(async () => {
       const result = await gasStationReceiverContract.state(
-        receiverInfo.chain.id,
+        payChain.id,
         txn.hash
       )
       console.log('result', result)
