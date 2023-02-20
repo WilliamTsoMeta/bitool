@@ -12,7 +12,6 @@ import Image from 'next/image'
 import { supportChainType, contractInfosType, contractInfoType } from 'types'
 import { useBalance, useConnect, useAccount, Chain, useNetwork } from 'wagmi'
 import ConnectBtn from 'components/ConnectBtn'
-import { InjectedConnector } from 'wagmi/connectors/injected'
 import { fetchBalance } from '@wagmi/core'
 import { clone } from 'lodash'
 import { getContract } from '@wagmi/core'
@@ -21,7 +20,12 @@ import swapRouterABI from 'abi/swapRouter.json'
 import { useSigner, useProvider } from 'wagmi'
 import useAllowance from 'hooks/useAllowance'
 import { erc20ABI } from 'wagmi'
-import { parseUnits } from 'ethers/lib/utils.js'
+import { parseUnits, isAddress, formatUnits } from 'ethers/lib/utils.js'
+import { BigNumber } from 'ethers'
+import Context from 'context/Context'
+import { format } from 'path'
+// import { useContext, useState, useEffect, useMemo } from 'react'
+
 export interface MainNetProps {
   gasStationContractInfo: contractInfosType
 }
@@ -33,8 +37,8 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     isConnected,
   } = useAccount()
   const { chain, chains } = useNetwork()
-  const { connect, connectors, error, isLoading, pendingConnector } =
-    useConnect({ connector: new InjectedConnector() })
+  // const { connect, connectors, error, isLoading, pendingConnector } =
+  //   useConnect({ connector: new InjectedConnector() })
 
   const [balance, setbalance] = useState({ formatted: '', symbol: '' })
   const [connected, setconnected] = useState(false)
@@ -59,14 +63,31 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   const [paying, setpaying] = useState(false)
   const fetchErc20Allowance = useAllowance()
   const [allowance, setallowance] = useState(0)
+  const { setContext } = useContext(Context)
 
   useEffect(() => {
     isConnected && setconnected(isConnected)
-  }, [isConnected])
+    if (!isConnected) {
+      setContext({
+        type: 'SET_ALERT',
+        payload: {
+          type: 'alert-error',
+          message: 'Please connect wallet',
+          show: true,
+        },
+      })
+    }
+  }, [isConnected, activeConnector, setContext])
 
   useEffect(() => {
-    chains && setchainsW(chains)
     console.log('chains', chains)
+    // if (chains.length <= 0) {
+    //   connect()
+    // }
+    if (chains && chains[0]?.id !== 1) {
+      setchainsW(chains)
+    }
+
     if (chain) {
       if (!receiverInfo.chain.id) {
         setreceiverInfo({ ...receiverInfo, chain })
@@ -141,20 +162,20 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   }
 
   const calcalNativeCurrency = async (amount: number) => {
-    let toWei = 1e18
-    switch (receiverInfo.chain.nativeCurrency.decimals) {
-      case 6:
-        toWei = 1e6
-        break
-    }
+    const decimals =
+      gasStationContractInfo[receiverInfo.chain.id].staableCoin?.decimals
+    const wtokenDecimals =
+      gasStationContractInfo[receiverInfo.chain.id].WToken?.decimals
+
     const nativeCurrencyAmn = await swapRouterContract.getAmountsOut(
-      amount * toWei,
+      parseUnits(amount.toString(), decimals).toString(),
       [
         gasStationContractInfo[receiverInfo.chain.id].staableCoin?.address,
         gasStationContractInfo[receiverInfo.chain.id].WToken?.address,
       ]
     )
-    return nativeCurrencyAmn
+
+    return formatUnits(nativeCurrencyAmn[1], wtokenDecimals).toString()
   }
 
   const receiveAmnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,7 +210,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   }
 
   const swap = async () => {
-    setpaying(true)
     let toWei = 1e18
     switch (receiverInfo.chain.nativeCurrency.decimals) {
       case 6:
@@ -197,27 +217,69 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
         break
     }
     let amount = receiverInfo.amount * toWei
-    if (amount.toString() && receiverInfo.chain.id && receiverInfo.address) {
-      const txn = await gasStationContract.deposit(
-        amount.toString(),
-        receiverInfo.chain.id,
-        receiverInfo.address
-      )
-
-      setInterval(async () => {
-        const result = await gasStationContract.state(
-          receiverInfo.chain.id,
-          txn.hash
-        )
-        console.log('result', result)
-        if (result) {
-          console.log('result', result)
-          setpaying(false)
-        }
-      }, 2000)
-    } else {
-      console.log('pay error 填错了')
+    let message
+    let err = false
+    if (receiverInfo.amount < 1 || receiverInfo.amount > 10) {
+      message = 'Please check your form, Amount should be $1-$10'
+      err = true
     }
+    console.log(
+      'isAddress(receiverInfo.address)',
+      isAddress(receiverInfo.address)
+    )
+
+    if (!isAddress(receiverInfo.address)) {
+      message = 'Please check your form, Receiving address'
+      err = true
+    }
+
+    // receiverInfo.chain.id &&
+    if (err) {
+      setContext({
+        type: 'SET_ALERT',
+        payload: {
+          type: 'alert-error',
+          message,
+          show: true,
+        },
+      })
+      setpaying(false)
+      return false
+    }
+
+    setpaying(true)
+    const txn = await gasStationContract.deposit(
+      amount.toString(),
+      receiverInfo.chain.id,
+      receiverInfo.address
+    )
+
+    let tries = 1
+    let timer = setInterval(async () => {
+      const result = await gasStationContract.state(
+        receiverInfo.chain.id,
+        txn.hash
+      )
+      console.log('result', result)
+      if (result) {
+        console.log('result', result)
+        setpaying(false)
+        clearInterval(timer)
+      }
+      tries += 1
+      if (tries > 100) {
+        setContext({
+          type: 'SET_ALERT',
+          payload: {
+            type: 'alert-error',
+            message: 'get gas error please cotact us',
+            show: true,
+          },
+        })
+        clearInterval(timer)
+        setpaying(false)
+      }
+    }, 2000)
   }
 
   const approve = async () => {
@@ -313,7 +375,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               height={28}
               alt="chains"
             />
-            <span className="ml-5">USDT</span>
+            <span className="flex items-center h-12 ml-5">USDT</span>
           </div>
         </div>
         <div className="flex mt-3 font-bold">
@@ -327,8 +389,9 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
             Bitool fee <span className="text-green-400">Free</span>
           </div>
         </div>
-        {/* allowance > 2  &&  */}
-        {connected &&
+
+        {allowance > 2 &&
+          connected &&
           (paying ? (
             <button className="w-full text-white bg-black border-0 btn btn-square loading"></button>
           ) : (
@@ -340,23 +403,24 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
             </div>
           ))}
 
-        {/* {connected && allowance <= 2 && (
+        {connected && allowance <= 2 && (
           <button
             className="w-full bg-green-500 border-gray-300 btn rounded-2xl"
             onClick={approve}
           >
             Approve
           </button>
-        )} */}
-
-        {!connected && (
-          <div
-            className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded cursor-pointer"
-            onClick={() => connect()}
-          >
-            Connect
-          </div>
         )}
+        {/* <div>{connected.toString()} xxx</div> */}
+        {/*  {!connected && (
+          // <div
+          //   className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded cursor-pointer"
+          //   onClick={() => connect()}
+          // >
+          //   Connect
+          // </div>
+          // <ConnectBtn></ConnectBtn>
+        )} */}
       </div>
     </>
   )

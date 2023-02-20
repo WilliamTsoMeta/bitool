@@ -49,6 +49,7 @@ export interface IJsonRPCError {
 export interface CoinType {
   name: string
   address: string
+  decimals?: number
 }
 
 export interface supportChainsType {

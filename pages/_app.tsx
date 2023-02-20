@@ -8,6 +8,7 @@ import { publicProvider } from 'wagmi/providers/public'
 import Context from 'context/Context'
 import { ContextType } from 'types'
 import { InjectedConnector } from 'wagmi/connectors/injected'
+import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import getSupportChains from 'util/SupportChains'
 import { Chain } from 'wagmi'
 
@@ -21,7 +22,16 @@ const { chains, provider, webSocketProvider } = configureChains(
 const client = createClient({
   autoConnect: true,
   provider,
-  connectors: [new InjectedConnector({ chains })],
+  connectors: [
+    new MetaMaskConnector({ chains }),
+    new InjectedConnector({
+      chains,
+      options: {
+        name: 'Injected',
+        shimDisconnect: true,
+      },
+    }),
+  ],
   webSocketProvider,
 })
 
@@ -50,7 +60,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             show: false,
           },
         })
-      }, 3000)
+      }, 5000)
     }
   }, [state.alert.show])
 
