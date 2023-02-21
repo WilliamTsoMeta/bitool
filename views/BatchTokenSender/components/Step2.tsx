@@ -26,7 +26,7 @@ export default function Step2() {
   const [estimateGas, setestimateGas] = useState('')
   const [estimateGasOrg, setestimateGasOrg] = useState([] as any)
   const { data: gasFee, isError, isLoading } = useFeeData()
-  const [approved, setapproved] = useState(false)
+  const [approved, setapproved] = useState(true)
   const { address: walletAddr, isConnecting, isDisconnected } = useAccount()
   const [contract, setcontract] = useState({} as Contract | null)
   const provider = useProvider()
@@ -37,6 +37,7 @@ export default function Step2() {
   const [progressErrorMsg, setprogressErrorMsg] = useState(
     'Some of your transfer transactions failed, please contact customer service to resolve.'
   )
+  const [approveLoading, setapproveLoading] = useState('')
 
   useEffect(() => {
     try {
@@ -204,6 +205,7 @@ export default function Step2() {
   }
 
   const approve = async () => {
+    setapproveLoading('loading')
     try {
       let ap = await tokenContract
         ?.connect(signer)
@@ -212,10 +214,11 @@ export default function Step2() {
           ethers.utils.parseUnits('20000000', batchTokenData.tokenDecimals)
         )
       const res = await ap.wait()
-      console.log('res', res)
+      setapproveLoading('')
       setapproved(true)
     } catch (error) {
       console.log('approve error', error)
+      setapproveLoading('')
     }
   }
 
@@ -453,13 +456,15 @@ export default function Step2() {
             </div>
             <div className="flex justify-end">
               {!approved && (
-                <button
-                  className="w-40 bg-green-500 border-gray-300 btn rounded-2xl"
+                <div
+                  className={`w-40 bg-green-500 border-gray-300 btn rounded-2xl ${approveLoading}`}
                   onClick={approve}
                 >
-                  {/* <button className="bg-green-500 btn btn-square loading"></button> */}
+                  {/* <button className="h-1 bg-green-500 border-0 btn btn-square ">
+                    xxx
+                  </button> */}
                   Approve
-                </button>
+                </div>
               )}
               {approved && estimateGas && (
                 <button
