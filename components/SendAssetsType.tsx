@@ -10,9 +10,9 @@ import { InjectedConnector } from 'wagmi/connectors/injected'
 export default function SendAssetsType() {
   const batchTokenData = useContext(BatchTokenContext)
   const { sendType, setBatchTokenData } = useContext(BatchTokenContext)
-  const { connect } = useConnect({
-    connector: new InjectedConnector(),
-  })
+  // const { connect } = useConnect({
+  //   connector: new InjectedConnector(),
+  // })
   const { address, isConnected } = useAccount()
 
   const [walletConect, setwalletConect] = useState(false)
@@ -218,21 +218,12 @@ export default function SendAssetsType() {
       )}
 
       <ErrList />
-      {walletConect ? (
+      {walletConect && (
         <button
           className="w-full mt-5 bg-black btn rounded-xl"
           onClick={nextStep}
         >
           Next Step
-        </button>
-      ) : (
-        <button
-          className="w-full mt-5 bg-black btn rounded-xl"
-          onClick={() => {
-            connect()
-          }}
-        >
-          Connect Wallet
         </button>
       )}
     </>

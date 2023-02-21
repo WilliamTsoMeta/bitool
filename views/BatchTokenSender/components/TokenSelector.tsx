@@ -27,12 +27,10 @@ export default function TokenSelector() {
   } = useSwitchNetwork()
   const batchTokenData = useContext(BatchTokenContext)
   const { sendType, setBatchTokenData } = useContext(BatchTokenContext)
+  const { connect, connectors, pendingConnector } = useConnect()
 
   const { chain, chains } = useNetwork()
   const { address, isConnecting, isDisconnected } = useAccount()
-  const { connect } = useConnect({
-    connector: new InjectedConnector(),
-  })
   // const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
   const {
     data: balance,
@@ -78,6 +76,9 @@ export default function TokenSelector() {
           pathname: '/batch_token_sender',
           query: { chainId: currentChain.id },
         })
+        if (connectors.length > 0) {
+          connect({ connector: connectors[0] })
+        }
       }
       settokenAddr(token)
     } catch (error) {

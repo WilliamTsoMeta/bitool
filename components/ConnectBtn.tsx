@@ -29,6 +29,12 @@ export default function ConnectBtn() {
     // networkSwitcher(EXPECT_CHAIN_ID);
   }, [isConnected])
 
+  /*   useEffect(() => {
+    if (connectors.length > 0) {
+      connect({ connector: connectors[0] })
+    }
+  }, [connectors, connect]) */
+
   // useEffect(() => {
   //   connectors[0] && connect && connect({ connector: connectors[0] })
   // }, [connectors, connect])
