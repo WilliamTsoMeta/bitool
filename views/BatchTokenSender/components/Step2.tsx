@@ -89,11 +89,14 @@ export default function Step2() {
   const caculateGas = async (addrs: string[][]) => {
     let addr: string[] = []
     let amn: string[] = []
-    let sum: number = 0
-
+    let sum: BigNumber = BigNumber.from('0')
     addrs.map((value) => {
       addr.push(value[0])
-      sum += Number(value[1])
+      const value1 = ethers.utils.parseUnits(
+        value[1],
+        batchTokenData.tokenDecimals
+      )
+      sum = BigNumber.from(value1).add(sum)
       amn.push(
         ethers.utils
           .parseUnits(value[1], batchTokenData.tokenDecimals)
@@ -107,10 +110,8 @@ export default function Step2() {
     ) {
       console.log('batchTokenData.tokenDecimals', batchTokenData.tokenDecimals)
       // platform token
-      let sumAmn = ethers.utils.parseUnits(
-        sum.toString(),
-        batchTokenData.tokenDecimals
-      )
+      let sumAmn = sum.toString()
+      console.log('sum', sumAmn)
       const rawGasEstimation = await contract
         ?.connect(signer as any)
         .estimateGas.sendMultiETH(addr, amn, {
@@ -289,10 +290,14 @@ export default function Step2() {
       try {
         let addr: string[] = []
         let amn: string[] = []
-        let sum: number = 0
+        let sum: BigNumber = BigNumber.from('0')
         addresses.map((value) => {
           addr.push(value[0])
-          sum += Number(value[1])
+          const value1 = ethers.utils.parseUnits(
+            value[1],
+            batchTokenData.tokenDecimals
+          )
+          sum = BigNumber.from(value1).add(sum)
           amn.push(
             ethers.utils
               .parseUnits(value[1], batchTokenData.tokenDecimals)
@@ -303,10 +308,7 @@ export default function Step2() {
 
         if (batchTokenData.unit === batchTokenData.gasUnit) {
           // platform token
-          let sumAmn = ethers.utils.parseUnits(
-            sum.toFixed(4),
-            batchTokenData.tokenDecimals
-          )
+          let sumAmn = sum.toString()
 
           txn = await contract?.connect(signer as any).sendMultiETH(addr, amn, {
             value: sumAmn,
