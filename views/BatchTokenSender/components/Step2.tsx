@@ -26,7 +26,7 @@ export default function Step2() {
   const [estimateGas, setestimateGas] = useState('')
   const [estimateGasOrg, setestimateGasOrg] = useState([] as any)
   const { data: gasFee, isError, isLoading } = useFeeData()
-  const [approved, setapproved] = useState(true)
+  const [approved, setapproved] = useState(false)
   const { address: walletAddr, isConnecting, isDisconnected } = useAccount()
   const [contract, setcontract] = useState({} as Contract | null)
   const provider = useProvider()
@@ -71,7 +71,7 @@ export default function Step2() {
     } catch (error) {
       console.log('error step2 65', error)
     }
-  }, [batchTokenData.parsedAddress, gasFee])
+  }, [batchTokenData.parsedAddress, gasFee, approved])
 
   useEffect(() => {
     if (batchTokenData.contractAddress) {
@@ -129,6 +129,7 @@ export default function Step2() {
   }
 
   const getEstimation = async (contract: any) => {
+    console.log('approved', approved)
     if (contract.estimateGas) {
       try {
         let chunkedAddr = chunk(batchTokenData.parsedAddress, 100)
@@ -149,6 +150,18 @@ export default function Step2() {
         return totoalEstimation
       } catch (error: any) {
         console.log('estttttt err', error)
+        if (error.message.indexOf('allowance')) {
+          setContext({
+            type: 'SET_ALERT',
+            payload: {
+              type: 'alert-error',
+              message: 'Please approve first to get gas fee estimation',
+              show: true,
+            },
+          })
+          return false
+        }
+
         setprogress('error')
         if (
           error.message.indexOf('cannot estimate gas') >= 0 ||
@@ -198,11 +211,23 @@ export default function Step2() {
           contract?.address,
           ethers.utils.parseUnits('20000000', batchTokenData.tokenDecimals)
         )
-      ap.wait()
+      const res = await ap.wait()
+      console.log('res', res)
       setapproved(true)
     } catch (error) {
       console.log('approve error', error)
     }
+  }
+
+  const disApprove = async () => {
+    let ap = await tokenContract
+      ?.connect(signer)
+      .approve(
+        contract?.address,
+        ethers.utils.parseUnits('0', batchTokenData.tokenDecimals)
+      )
+    ap.wait()
+    setapproved(true)
   }
 
   useMemo(() => {
@@ -216,8 +241,8 @@ export default function Step2() {
   }
 
   const preBatchSend = async () => {
+    let res = false
     try {
-      let res = false
       if (batchTokenData.parsedAddress.length > 100) {
         setContext({
           type: 'SET_ALERT',
@@ -418,6 +443,13 @@ export default function Step2() {
               >
                 back
               </button>
+
+              {/* <button
+                className="w-40 bg-green-500 border-gray-300 btn rounded-2xl"
+                onClick={disApprove}
+              >
+                DisApprove
+              </button> */}
             </div>
             <div className="flex justify-end">
               {!approved && (
@@ -425,6 +457,7 @@ export default function Step2() {
                   className="w-40 bg-green-500 border-gray-300 btn rounded-2xl"
                   onClick={approve}
                 >
+                  {/* <button className="bg-green-500 btn btn-square loading"></button> */}
                   Approve
                 </button>
               )}

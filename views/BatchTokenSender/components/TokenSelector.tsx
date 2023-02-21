@@ -115,7 +115,7 @@ export default function TokenSelector() {
   }, [currentChain, chain, switchNetworkAsync])
 
   useEffect(() => {
-    if (balance) {
+    if (balance && !batchTokenData.tokenAddress) {
       console.log('balance', balance)
       setuserBalance({
         count: Number(balance.formatted).toFixed(2).toString(),
@@ -174,26 +174,6 @@ export default function TokenSelector() {
     }
   }
 
-  async function changeTokenAntUI(value: any) {
-    const val = value[0] ?? ''
-    settokenAddr(val)
-    console.log('value', val, currentChain.token)
-    try {
-      if (val !== currentChain.token) {
-        const validAddr = await getAddress(val)
-        await getUserBalance(val)
-        setBatchTokenData({
-          type: 'UPDATE_TOKEN_ADDRESS',
-          payload: val,
-        })
-      }
-      setaddrErr({ show: false, message: '' })
-    } catch (error) {
-      setaddrErr({ show: true, message: 'unavailable address' })
-    }
-    // todo validate token address
-  }
-
   async function changeToken(e: React.ChangeEvent<HTMLInputElement>) {
     settokenAddr(e.target.value)
     try {
@@ -212,6 +192,15 @@ export default function TokenSelector() {
     }
     // todo validate token address
   }
+
+  useEffect(() => {
+    const getBan = async () => {
+      if (batchTokenData.tokenAddress) {
+        await getUserBalance(batchTokenData.tokenAddress)
+      }
+    }
+    getBan()
+  }, [batchTokenData.tokenAddress])
 
   async function focusToken(value: any) {
     console.log('value', value)
