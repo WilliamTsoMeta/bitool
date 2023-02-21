@@ -151,8 +151,8 @@ export default function Step2() {
         setestimateGasOrg(gasArr)
         return totoalEstimation
       } catch (error: any) {
-        console.log('estttttt err', error)
-        if (error.message.indexOf('allowance')) {
+        console.log('estttttt err', error.message)
+        if (error.message.indexOf('allowance') >= 0) {
           setContext({
             type: 'SET_ALERT',
             payload: {
