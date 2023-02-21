@@ -108,7 +108,7 @@ export default function Step2() {
       console.log('batchTokenData.tokenDecimals', batchTokenData.tokenDecimals)
       // platform token
       let sumAmn = ethers.utils.parseUnits(
-        sum.toFixed(4),
+        sum.toString(),
         batchTokenData.tokenDecimals
       )
       const rawGasEstimation = await contract
