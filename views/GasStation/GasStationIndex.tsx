@@ -65,7 +65,7 @@ const GasStationIndex = () => {
       {sendType === 'main' ? (
         <MainNet gasStationContractInfo={gasStationContractInfo}></MainNet>
       ) : (
-        <TestNet supportChains={supportChains}></TestNet>
+        <TestNet gasStationContractInfo={gasStationContractInfo}></TestNet>
       )}
 
       <Footer></Footer>

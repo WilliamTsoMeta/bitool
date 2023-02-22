@@ -3,6 +3,9 @@ import { contractInfosType } from 'types/index'
 export function useSupportChains() {
   const env = process.env.NODE_ENV
 
+  // eth
+  // polygon
+  //
   const getGasStationContractInfo = (): contractInfosType => {
     if (env === 'development') {
       return {
@@ -19,6 +22,7 @@ export function useSupportChains() {
             address: '0x35B8517D2D27E4736b86799EE9Bff14a512aCD7E',
             decimals: 18,
           },
+          Faucet: 'https://faucet.avax.network/',
         },
         97: {
           contractAddress: '0x728e36622A2f6A6a76E5c826b12789D1606Fed1F',
@@ -33,6 +37,7 @@ export function useSupportChains() {
             address: '0xFc75633d4dB2e5f211E5851a5Fc6799e119cEa6C',
             decimals: 18,
           },
+          Faucet: 'https://testnet.bnbchain.org/faucet-smart',
         },
       }
     }
@@ -50,6 +55,7 @@ export function useSupportChains() {
           address: '0x35B8517D2D27E4736b86799EE9Bff14a512aCD7E',
           decimals: 18,
         },
+        Faucet: 'https://',
       },
       97: {
         contractAddress: '0x728e36622A2f6A6a76E5c826b12789D1606Fed1F',
@@ -64,6 +70,7 @@ export function useSupportChains() {
           address: '0xFc75633d4dB2e5f211E5851a5Fc6799e119cEa6C',
           decimals: 18,
         },
+        Faucet: 'https://',
       },
     }
   }

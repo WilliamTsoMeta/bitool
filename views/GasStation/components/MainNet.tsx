@@ -44,7 +44,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   const [connected, setconnected] = useState(false)
   const [receiverInfo, setreceiverInfo] = useState({
     chain: {} as Chain,
-    amount: 0, //usdt
+    amount: '', //usdt
     address: '',
   })
 
@@ -163,7 +163,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
   const receivingChainChange = (chain: Chain) => {
     settokenSymbol(chain?.nativeCurrency?.symbol)
-    setreceiverInfo({ ...receiverInfo, amount: 0, chain })
+    setreceiverInfo({ ...receiverInfo, amount: '', chain })
     setgetTokenCount('0')
   }
 
@@ -171,7 +171,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     // setreceiverInfo({ ...receiverInfo, chain })
     setpayChain(chain)
     setgetTokenCount('0')
-    setreceiverInfo({ ...receiverInfo, amount: 0 })
+    setreceiverInfo({ ...receiverInfo, amount: '' })
   }
 
   const calcalNativeCurrency = async (amount: number) => {
@@ -197,7 +197,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   const receiveAmnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.validity.valid) {
       const amount = Number(e.target.value)
-      setreceiverInfo({ ...receiverInfo, amount })
+      setreceiverInfo({ ...receiverInfo, amount: amount.toString() })
       settokenLoading(true)
       clearTimeout(timer)
       const timerLocal = setTimeout(async () => {
@@ -212,7 +212,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       }, 1000)
       settimer(timerLocal)
     } else {
-      setgetTokenCount('0')
+      setgetTokenCount('')
     }
   }
 
@@ -221,8 +221,8 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   }
 
   const receiveAmnFocus = () => {
-    setreceiverInfo({ ...receiverInfo, amount: 0 })
-    setgetTokenCount('0')
+    setreceiverInfo({ ...receiverInfo, amount: '' })
+    setgetTokenCount('')
   }
 
   const swap = async () => {
@@ -232,10 +232,11 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
         toWei = 1e6
         break
     }
-    let amount = receiverInfo.amount * toWei
+    const orgAmn = Number(receiverInfo.amount)
+    let amount = orgAmn * toWei
     let message
     let err = false
-    if (receiverInfo.amount < 1 || receiverInfo.amount > 10) {
+    if (orgAmn < 1 || orgAmn > 10) {
       message = 'Please check your form, Amount should be $1-$10'
       err = true
     }
@@ -348,22 +349,24 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               defaultChain={chainW}
               key="receiver"
               onChainChange={receivingChainChange}
+              label="token"
             ></SelectChain>
           )}
         </div>
-        <p className="my-2 font-semibold">How much you want to buy?</p>
+        <p className="my-2 font-semibold">
+          How much you want to buy?(Range 1-10 USDT)
+        </p>
         <div className="flex w-full">
           <div className="flex items-center pl-2 text-black border border-gray-300 rounded">
             <span className="mr-1 text-xl font-semibold">$</span>
             <input
               type="text"
               name="sendNum"
-              className="h-12 "
-              placeholder="1"
+              className="h-12 outline-0"
               onChange={receiveAmnChange}
               value={receiverInfo.amount}
               onFocus={receiveAmnFocus}
-              pattern="[0-9]*"
+              pattern="^([1-9]|10)$"
             />
           </div>
 
@@ -380,7 +383,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
         <input
           type="text"
           name="receiveAddress"
-          className="w-full h-12 col-span-2 pl-2 mt-5 text-black border border-gray-300 rounded"
+          className="w-full h-12 col-span-2 pl-2 mt-5 text-black border border-gray-300 rounded outline-0"
           placeholder="Receiving Address"
           onChange={receiveAddrChange}
           value={receiverInfo.address}
@@ -422,27 +425,29 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           </div>
         </div>
 
-        {allowance > 2 &&
-          connected &&
-          (paying ? (
-            <button className="w-full text-white bg-black border-0 btn btn-square loading"></button>
-          ) : (
-            <div
-              className="flex items-center justify-center h-12 mt-3 text-lg font-bold text-white bg-black rounded-lg cursor-pointer"
-              onClick={swap}
-            >
-              Pay <span className="mx-1"> {receiverInfo.amount} </span> USDT
-            </div>
-          ))}
+        <div className="flex justify-center w-full">
+          {allowance > 2 &&
+            connected &&
+            (paying ? (
+              <button className="w-40 mt-3 text-black border btn btn-outline loading"></button>
+            ) : (
+              <div
+                className="w-40 mt-3 text-lg text-black btn btn-outline"
+                onClick={swap}
+              >
+                Pay <span className="mx-1"> {receiverInfo.amount} </span> USDT
+              </div>
+            ))}
 
-        {connected && allowance <= 2 && (
-          <button
-            className="w-full bg-green-500 border-gray-300 btn rounded-2xl"
-            onClick={approve}
-          >
-            Approve
-          </button>
-        )}
+          {connected && allowance <= 2 && (
+            <button
+              className="w-40 mt-3 btn-outline btn rounded-2xl"
+              onClick={approve}
+            >
+              Approve
+            </button>
+          )}
+        </div>
         {/* <div>{connected.toString()} xxx</div> */}
         {/*  {!connected && (
           // <div

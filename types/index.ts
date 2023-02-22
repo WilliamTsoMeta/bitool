@@ -76,6 +76,7 @@ export interface contractInfoType {
   swaprouterContract: string
   staableCoin: CoinType
   WToken: CoinType
+  Faucet: string
 }
 
 export interface contractInfosType {

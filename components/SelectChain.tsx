@@ -19,6 +19,7 @@ interface Props {
   defaultChain: Chain
   onChainChange: Function
   invokeWallet?: boolean
+  label?: string
 }
 export default function SelectChain(props: Props) {
   const { setContext } = useContext(Context)
@@ -39,7 +40,7 @@ export default function SelectChain(props: Props) {
       } */
       .ant-select-selector {
         height: 46px !important;
-        border: 1px solid #355dff !important;
+        /* border: 1px solid #355dff !important; */
         line-height: 46px;
       }
       .ant-select-selection-item {
@@ -99,7 +100,8 @@ export default function SelectChain(props: Props) {
                     <span className="">
                       {/* {chain.name.slice(0, 15)} */}
                       {/* {chain.name.length > 15 ? '...' : ''} */}
-                      {chain.name}
+                      {chain.name}{' '}
+                      {props.label === 'token' && chain.nativeCurrency.symbol}
                     </span>
                   </div>
                 </Option>
