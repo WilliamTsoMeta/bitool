@@ -70,7 +70,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
   useEffect(() => {
     isConnected && setconnected(isConnected)
-    if (!isConnected) {
+    /* if (!isConnected) {
       setContext({
         type: 'SET_ALERT',
         payload: {
@@ -79,7 +79,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           show: true,
         },
       })
-    }
+    } */
   }, [isConnected, activeConnector, setContext])
 
   useEffect(() => {
@@ -100,7 +100,10 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   }, [chain, chains, receiverInfo])
 
   useEffect(() => {
+    // only runs under tentnet for development enviroment
+
     payChain.id &&
+      gasStationContractInfo[payChain.id] &&
       userAddress &&
       gasStationContractInfo[payChain.id].staableCoin?.address &&
       fetchBalance({
@@ -130,7 +133,9 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   useEffect(() => {
     if (
       payChain.id &&
+      gasStationContractInfo[payChain.id] &&
       signer &&
+      gasStationContractInfo[receiverInfo?.chain?.id] &&
       gasStationContractInfo[payChain.id].contractAddress
     ) {
       const gasStationContract = getContract({
@@ -317,7 +322,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
   const approve = async () => {
     try {
-      if (signer) {
+      if (signer && gasStationContractInfo[payChain.id]) {
         const tokenContract = getContract({
           address: gasStationContractInfo[payChain.id].staableCoin?.address,
           abi: erc20ABI,

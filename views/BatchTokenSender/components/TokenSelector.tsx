@@ -53,44 +53,42 @@ export default function TokenSelector() {
   const [gasUnit, setgasUnit] = useState('')
   const [tokenOptions, settokenOptions] = useState([{} as tokenOptionTypes])
 
+  let defaultChainId = Number(process.env.NEXT_PUBLIC_DEFAULT_CHAIN)
+  if (typeof window !== 'undefined') {
+    const localChainId = window.localStorage.getItem('defaultChainId')
+
+    if (localChainId && localChainId !== '') {
+      defaultChainId = Number(localChainId)
+    }
+  }
+
   useEffect(() => {
     try {
       let token = ''
-      // console.log(window.location.search.indexOf('chainId') >= 0)
-      if (router.query.chainId) {
+      if (defaultChainId) {
         const chain = supportChains.filter(
-          (value) => value.id === Number(router.query.chainId)
+          (value) => value.id === defaultChainId
         )
         setcurrentChain(chain[0])
         token =
           batchTokenData.tokenAddress !== ''
             ? batchTokenData.tokenAddress
             : chain[0].token
-      } else {
-        setcurrentChain(supportChains[0])
-        token =
-          batchTokenData.tokenAddress !== ''
-            ? batchTokenData.tokenAddress
-            : supportChains[0].token
-        router.push({
-          pathname: '/batch_token_sender',
-          query: { chainId: currentChain.id },
-        })
       }
       settokenAddr(token)
     } catch (error) {
       console.log('error', error)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     setBatchTokenData({
       type: 'UPDATE_CONTRACT_ADDRESS',
       payload: currentChain.contractAddress,
     })
-  }, [currentChain])
+  }, [currentChain, setBatchTokenData])
 
-  function validateChain() {
+  /*   function validateChain() {
     try {
       if (currentChain.id !== chain?.id) {
         console.log('switch network')
@@ -113,12 +111,14 @@ export default function TokenSelector() {
     } catch (error) {
       console.log('error', error)
     }
-  }
+  } 
 
   useEffect(() => {
     // switch network
     validateChain()
   }, [currentChain, chain, switchNetworkAsync])
+
+  */
 
   useEffect(() => {
     if (balance && !batchTokenData.tokenAddress) {
@@ -141,11 +141,14 @@ export default function TokenSelector() {
   }, [balance, currentChain])
 
   function chainChange(value: string) {
-    console.log('value', value)
+    console.log('chainChange', value)
     const chain = supportChains.filter((chain) => chain.name === value)
     setcurrentChain(chain[0])
     settokenAddr(chain[0].token)
     // url param will changed after wallet chain changed
+    switchNetworkAsync?.(chain[0].id).then(() => {
+      localStorage.setItem('defaultChainId', chain[0].id.toString())
+    })
   }
 
   async function getUserBalance(tokenAddr: any) {

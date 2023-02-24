@@ -63,7 +63,9 @@ export default function SelectChain(props: Props) {
       )
       // url param will changed after wallet chain changed
       if (props.invokeWallet && selectChain[0].id !== chain?.id) {
-        await switchNetworkAsync?.(selectChain[0].id)
+        await switchNetworkAsync?.(selectChain[0].id).then(() => {
+          localStorage.setItem('defaultChainId', selectChain[0].id.toString())
+        })
       }
       setcurrentChain(selectChain[0])
       props.onChainChange(selectChain[0])

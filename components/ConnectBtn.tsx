@@ -1,9 +1,17 @@
-import { useAccount, useConnect, useDisconnect, useNetwork } from 'wagmi'
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useNetwork,
+  useSwitchNetwork,
+} from 'wagmi'
 import { useIsMounted } from 'usehooks-ts'
 import { ReactElement, useEffect, useState } from 'react'
 import Image from 'next/image'
 
 export default function ConnectBtn() {
+  let defaultChainId = Number(process.env.NEXT_PUBLIC_DEFAULT_CHAIN)
+  const { chains: chaissw, switchNetworkAsync } = useSwitchNetwork()
   // ANCHOR hooks
   const { address, connector: activeConnector, isConnected } = useAccount()
   const isMounted = useIsMounted()
@@ -23,22 +31,37 @@ export default function ConnectBtn() {
 
   useEffect(() => {
     setconnected(isConnected)
+    validateChain()
   }, [isConnected])
 
-  useEffect(() => {
-    console.log('isConnected', isConnected)
-    connect({ connector: connectors[0] })
-  }, [chain?.id])
-
-  /*   useEffect(() => {
-    if (connectors.length > 0) {
-      connect({ connector: connectors[0] })
+  function validateChain() {
+    try {
+      const timer = setTimeout(() => {
+        const localChainId = window.localStorage.getItem('defaultChainId')
+        if (localChainId && localChainId !== '') {
+          defaultChainId = Number(localChainId)
+        }
+        if (chain?.id && defaultChainId !== chain?.id) {
+          switchNetworkAsync?.(defaultChainId).then(() => {
+            localStorage.setItem('defaultChainId', defaultChainId.toString())
+          })
+        }
+        clearTimeout(timer)
+      }, 500)
+    } catch (error) {
+      console.log('error', error)
     }
-  }, [connectors, connect]) */
+  }
 
-  // useEffect(() => {
-  //   connectors[0] && connect && connect({ connector: connectors[0] })
-  // }, [connectors, connect])
+  useEffect(() => {
+    connect({ connector: connectors[0] })
+    console.log('chain.id change', chain?.id)
+    validateChain()
+  }, [chain, chain?.id])
+
+  useEffect(() => {
+    connect({ connector: connectors[0] })
+  }, [])
 
   // ANCHOR methods
 
@@ -110,16 +133,4 @@ export default function ConnectBtn() {
       </div>
     )
   }
-
-  /* if (isConnected)
-    return 
-
-  return (
-    <button
-      className={`btn ${styles.connectBtn} lg:w-44 `}
-      onClick={() => connect()}
-    >
-      
-    </button>
-  ); */
 }
