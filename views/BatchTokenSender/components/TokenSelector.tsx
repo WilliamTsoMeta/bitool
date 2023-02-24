@@ -31,7 +31,7 @@ export default function TokenSelector() {
 
   const { chain, chains } = useNetwork()
   const { address, isConnecting, isDisconnected } = useAccount()
-  // const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
+
   const {
     data: balance,
     isError,
@@ -76,9 +76,6 @@ export default function TokenSelector() {
           pathname: '/batch_token_sender',
           query: { chainId: currentChain.id },
         })
-        if (connectors.length > 0) {
-          connect({ connector: connectors[0] })
-        }
       }
       settokenAddr(token)
     } catch (error) {
@@ -94,19 +91,27 @@ export default function TokenSelector() {
   }, [currentChain])
 
   function validateChain() {
-    if (currentChain.id !== chain?.id) {
-      console.log('switch network')
-      switchNetworkAsync?.(currentChain.id).then(() => {
-        setBatchTokenData({
-          type: 'UPDATE_CONTRACT_ADDRESS',
-          payload: currentChain.contractAddress,
-        })
+    try {
+      if (currentChain.id !== chain?.id) {
+        console.log('switch network')
+        console.log('connectors[0]', connectors[0])
+        switchNetworkAsync?.(currentChain.id).then(() => {
+          if (connectors.length > 0) {
+            connect({ connector: connectors[0] })
+          }
+          setBatchTokenData({
+            type: 'UPDATE_CONTRACT_ADDRESS',
+            payload: currentChain.contractAddress,
+          })
 
-        router.push({
-          pathname: '/batch_token_sender',
-          query: { chainId: currentChain.id },
+          router.push({
+            pathname: '/batch_token_sender',
+            query: { chainId: currentChain.id },
+          })
         })
-      })
+      }
+    } catch (error) {
+      console.log('error', error)
     }
   }
 
@@ -136,9 +141,6 @@ export default function TokenSelector() {
   }, [balance, currentChain])
 
   function chainChange(value: string) {
-    // if (!isDisconnected) {
-    //   connect()
-    // }
     console.log('value', value)
     const chain = supportChains.filter((chain) => chain.name === value)
     setcurrentChain(chain[0])
@@ -229,7 +231,7 @@ export default function TokenSelector() {
       <div className={`grid grid-cols-3 mt-5 gap-7`}>
         <div className={`w-ful ${style.chooseChain}`}>
           {currentChain.name && (
-            <Select defaultValue={currentChain.name} onChange={chainChange}>
+            <Select value={currentChain.name} onChange={chainChange}>
               {supportChains.map((chain) => {
                 return (
                   <Option value={chain.name} label={chain.name} key={chain.id}>

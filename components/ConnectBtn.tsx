@@ -1,16 +1,12 @@
 import { useAccount, useConnect, useDisconnect, useNetwork } from 'wagmi'
 import { useIsMounted } from 'usehooks-ts'
 import { ReactElement, useEffect, useState } from 'react'
-// import { useNetworkSwitcher } from 'hooks/useNetworkSwitcher'
 import Image from 'next/image'
-// import { InjectedConnector } from 'wagmi/connectors/injected'
 
 export default function ConnectBtn() {
   // ANCHOR hooks
   const { address, connector: activeConnector, isConnected } = useAccount()
   const isMounted = useIsMounted()
-  // const { connect, connectors, error, isLoading, pendingConnector } =
-  //   useConnect()
   const { disconnect } = useDisconnect()
 
   // ANCHOR data
@@ -18,6 +14,7 @@ export default function ConnectBtn() {
   const [mounted, setmounted] = useState(false)
   const { connect, connectors, error, isLoading, pendingConnector } =
     useConnect()
+  const { chain, chains } = useNetwork()
 
   // ANCHOR life cycle
   useEffect(() => {
@@ -26,8 +23,12 @@ export default function ConnectBtn() {
 
   useEffect(() => {
     setconnected(isConnected)
-    // networkSwitcher(EXPECT_CHAIN_ID);
   }, [isConnected])
+
+  useEffect(() => {
+    console.log('isConnected', isConnected)
+    connect({ connector: connectors[0] })
+  }, [chain?.id])
 
   /*   useEffect(() => {
     if (connectors.length > 0) {

@@ -23,14 +23,21 @@ const client = createClient({
   autoConnect: true,
   provider,
   connectors: [
-    new MetaMaskConnector({ chains }),
-    new InjectedConnector({
+    new MetaMaskConnector({
+      chains,
+      options: {
+        shimDisconnect: true,
+        shimChainChangedDisconnect: false,
+      },
+    }),
+    /* new InjectedConnector({
       chains,
       options: {
         name: 'Injected',
-        shimDisconnect: true,
+        shimDisconnect: false,
+        shimChainChangedDisconnect: false,
       },
-    }),
+    }), */
   ],
   webSocketProvider,
 })
