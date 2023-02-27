@@ -12,7 +12,7 @@ import Image from 'next/image'
 import { contractInfosType } from 'types'
 import { useAccount, Chain, useNetwork } from 'wagmi'
 import { fetchBalance } from '@wagmi/core'
-import { clone } from 'lodash'
+import { clone, values } from 'lodash'
 import { getContract } from '@wagmi/core'
 import gasStation from 'abi/gasStation.json'
 import swapRouterABI from 'abi/swapRouter.json'
@@ -20,11 +20,8 @@ import { useSigner, useProvider } from 'wagmi'
 import useAllowance from 'hooks/useAllowance'
 import { erc20ABI } from 'wagmi'
 import { parseUnits, isAddress, formatUnits } from 'ethers/lib/utils.js'
-
 import Context from 'context/Context'
 import { getProvider } from '@wagmi/core'
-
-// import { useContext, useState, useEffect, useMemo } from 'react'
 
 export interface MainNetProps {
   gasStationContractInfo: contractInfosType

@@ -25,6 +25,7 @@ export default function SelectChain(props: Props) {
   const { setContext } = useContext(Context)
   const { Option } = Select
   const { chain, chains } = useNetwork()
+  const [notSupport, setnotSupport] = useState(false)
   const {
     chains: chaissw,
     error,
@@ -56,6 +57,16 @@ export default function SelectChain(props: Props) {
   `
   const [currentChain, setcurrentChain] = useState(props.defaultChain)
 
+  useEffect(() => {
+    if (props.supportChains && props.defaultChain) {
+      const exist = props.supportChains.filter((value) => {
+        return props.defaultChain.id === value.id
+      })
+      exist.length === 0 ? setnotSupport(true) : setnotSupport(false)
+    }
+    setcurrentChain(props.defaultChain)
+  }, [props.defaultChain, props.supportChains])
+
   async function chainChange(value: string) {
     try {
       const selectChain = props.supportChains.filter(
@@ -85,7 +96,7 @@ export default function SelectChain(props: Props) {
     <div className="w-full">
       <GlobalStyle></GlobalStyle>
       <div className={`chooseChain`}>
-        {
+        {!notSupport && currentChain.name && (
           <Select onChange={chainChange} value={currentChain.name}>
             {props.supportChains.map((chain) => {
               let name = ''
@@ -100,8 +111,6 @@ export default function SelectChain(props: Props) {
                       className="mr-3 h-7 w-7"
                     ></Image>
                     <span className="">
-                      {/* {chain.name.slice(0, 15)} */}
-                      {/* {chain.name.length > 15 ? '...' : ''} */}
                       {chain.name}{' '}
                       {props.label === 'token' && chain.nativeCurrency.symbol}
                     </span>
@@ -110,7 +119,12 @@ export default function SelectChain(props: Props) {
               )
             })}
           </Select>
-        }
+        )}
+        {notSupport && (
+          <div className="px-2 py-3 font-bold border">
+            Please switch chain in your wallet
+          </div>
+        )}
       </div>
     </div>
   )
