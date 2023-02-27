@@ -11,7 +11,8 @@ import { InjectedConnector } from 'wagmi/connectors/injected'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import getSupportChains from 'util/SupportChains'
 import { Chain } from 'wagmi'
-import Script from 'next/script'
+import * as ga from '../lib/ga'
+import { useRouter } from 'next/router'
 
 const chainArr = getSupportChains()
 
@@ -57,6 +58,22 @@ function reducer(state: ContextType, action: { type: string; payload: any }) {
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
+  const router = useRouter()
+
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      ga.pageview(url)
+    }
+    //When the component is mounted, subscribe to router changes
+    //and log those page views
+    router.events.on('routeChangeComplete', handleRouteChange)
+
+    // If the component is unmounted, unsubscribe
+    // from the event with the `off` method
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange)
+    }
+  }, [router.events])
   const initState = { alert: { type: 'error', message: '', show: false } }
   const [state, setContext] = useReducer(reducer, initState as ContextType)
   useEffect(() => {
@@ -79,22 +96,24 @@ function MyApp({ Component, pageProps }: AppProps) {
           <Head>
             <title>Bitool</title>
             <link rel="icon" href="/favicon.ico" />
+            {/* Global Site Tag (gtag.js) - Google Analytics */}
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}', {
+              page_path: window.location.pathname,
+            });
+          `,
+              }}
+            />
           </Head>
-          <div>
-            <Script
-              strategy="afterInteractive"
-              src="https://www.googletagmanager.com/gtag/js?id=G-74YPZNZ8Z1"
-            ></Script>
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-  
-                gtag('config', 'G-74YPZNZ8Z1');
-                `}
-            </Script>
-          </div>
           {state.alert.show ? (
             <div className="fixed cursor-pointer top-20 right-2">
               <div className={`shadow-lg alert ${state.alert.type}`}>
