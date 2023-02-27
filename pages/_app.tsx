@@ -11,6 +11,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import getSupportChains from 'util/SupportChains'
 import { Chain } from 'wagmi'
+import Script from 'next/script'
 
 const chainArr = getSupportChains()
 
@@ -79,7 +80,21 @@ function MyApp({ Component, pageProps }: AppProps) {
             <title>Bitool</title>
             <link rel="icon" href="/favicon.ico" />
           </Head>
-
+          <div>
+            <Script
+              strategy="afterInteractive"
+              src="https://www.googletagmanager.com/gtag/js?id=G-74YPZNZ8Z1"
+            ></Script>
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+  
+                gtag('config', 'G-74YPZNZ8Z1');
+                `}
+            </Script>
+          </div>
           {state.alert.show ? (
             <div className="fixed cursor-pointer top-20 right-2">
               <div className={`shadow-lg alert ${state.alert.type}`}>
