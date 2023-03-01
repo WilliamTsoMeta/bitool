@@ -4,6 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:staging": "next start -p 4000",
     "build:staging": "env-cmd -f .env.staging npm run build",
     "lint": "next lint"
   },

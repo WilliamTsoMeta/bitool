@@ -4,13 +4,10 @@ import Image from 'next/image'
 import React, { useRef, useState, useEffect, useContext, useMemo } from 'react'
 import { MainNet } from './components/MainNet'
 import { TestNet } from './components/TestNet'
-import { supportChainsType } from 'types'
-import { useSupportChains } from 'hooks/useSupportChains'
+import { getGasStationContractInfo } from 'config/SupportChains'
 import getSupportChains from 'util/SupportChains'
 const GasStationIndex = () => {
   const [sendType, setsendType] = useState('main')
-
-  const { getGasStationContractInfo } = useSupportChains()
   const [supportChains, setsupportChains] = useState(getSupportChains())
   const [gasStationContractInfo, setgasStationContractInfo] = useState(
     getGasStationContractInfo()

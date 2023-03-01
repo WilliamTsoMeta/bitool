@@ -13,7 +13,7 @@ import { fetchBalance } from '@wagmi/core'
 import { useRouter } from 'next/router'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import BatchTokenContext from 'context/BatchTokenContext'
-import { supportChainsType, tokenOptionTypes } from 'types'
+import { batchTokenContractInfoType, tokenOptionTypes } from 'types'
 import { Select, Space } from 'antd'
 import style from 'styles/BatchToken.module.css'
 
@@ -46,7 +46,9 @@ export default function TokenSelector() {
 
   const supportChains = batchTokenData.supportChains
 
-  const [currentChain, setcurrentChain] = useState({} as supportChainsType)
+  const [currentChain, setcurrentChain] = useState(
+    {} as batchTokenContractInfoType
+  )
   const [tokenAddr, settokenAddr] = useState('')
   const [addrErr, setaddrErr] = useState({ show: false, message: '' })
   const [userBalance, setuserBalance] = useState({ count: '0', unit: 'USDC' })

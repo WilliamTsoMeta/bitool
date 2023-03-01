@@ -25,7 +25,7 @@ export interface BatchTokenContextType {
   operationType: string
   addrErr: addrErrType
   simpleNumber: number
-  supportChains: supportChainsType[]
+  supportChains: batchTokenContractInfoType[]
   txn: Array<string>
 }
 
@@ -52,13 +52,13 @@ export interface CoinType {
   decimals?: number
 }
 
-export interface supportChainsType {
+/* export interface supportChainsType {
   id: number
   name: string
   token: string
   contractAddress: string
   tokenOptions: tokenOptionTypes[]
-}
+} */
 
 export interface tokenOptionTypes {
   label: string
@@ -81,4 +81,20 @@ export interface contractInfoType {
 
 export interface contractInfosType {
   [key: number]: contractInfoType
+}
+
+export interface batchTokenContractInfoType {
+  id: number
+  name: string
+  token: string
+  contractAddress: string
+  tokenOptions: [
+    {
+      label: string
+      value: string
+    }
+  ]
+}
+export interface batchTokenContractInfosType {
+  [key: number]: batchTokenContractInfoType
 }
