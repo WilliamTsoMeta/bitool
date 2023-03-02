@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect, useContext, useMemo } from 'react'
 import { MainNet } from './components/MainNet'
 import { TestNet } from './components/TestNet'
 import { getGasStationContractInfo } from 'config/SupportChains'
-import getSupportChains from 'util/SupportChains'
+import getSupportChains from 'config/SupportChainsWagmi'
 const GasStationIndex = () => {
   const [sendType, setsendType] = useState('main')
   const [supportChains, setsupportChains] = useState(getSupportChains())

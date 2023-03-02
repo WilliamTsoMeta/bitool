@@ -23,9 +23,9 @@ const chainArr = [
   okc,
 ]
 const env = process.env.NEXT_PUBLIC_ENV
-
+console.log('env', env)
 export default function getSupportChains() {
-  if (env === 'development' || 'staging') {
+  if (env === 'development' || env === 'staging') {
     return chainArrDev
   }
 

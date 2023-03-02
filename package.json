@@ -5,7 +5,8 @@
     "build": "next build",
     "start": "next start",
     "start:staging": "next start -p 4000",
-    "build:staging": "env-cmd -f .env.staging npm run build",
+    "build:staging": "env-cmd -f .env.production npm run build",
+    "dev:prod": "env-cmd -f .env.production next dev",
     "lint": "next lint"
   },
   "dependencies": {

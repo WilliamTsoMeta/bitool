@@ -235,7 +235,7 @@ export default function TokenSelector() {
       </div>
       <div className={`grid grid-cols-3 mt-5 gap-7`}>
         <div className={`w-ful ${style.chooseChain}`}>
-          {currentChain.name && (
+          {currentChain && currentChain.name && (
             <Select value={currentChain.name} onChange={chainChange}>
               {supportChains.map((chain) => {
                 return (
