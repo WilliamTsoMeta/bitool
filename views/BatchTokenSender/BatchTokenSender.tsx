@@ -6,12 +6,9 @@ import Step2 from './components/Step2'
 import Step3 from './components/Step3'
 import BatchTokenContext from '../../context/BatchTokenContext'
 import { useReducer } from 'react'
-import {
-  BatchTokenContextType,
-  errType,
-  addrErrType,
-  supportChainsType,
-} from 'types/index'
+import { getBatchTokenContractInfo } from 'config/SupportChains'
+import { BatchTokenContextType, errType, addrErrType } from 'types/index'
+
 function reducer(
   state: BatchTokenContextType,
   action: { type: string; payload: any }
@@ -59,12 +56,18 @@ function reducer(
       return { ...state }
     case 'UPDATE_SUPPORT_CHAINS':
       state.supportChains = action.payload
+      return { ...state }
+    case 'UPDATE_TXN':
+      state.txn = action.payload
+      return { ...state }
     default:
       throw new Error('none type fit')
   }
 }
 
 export default function BatchTokenSender() {
+  const supportChains = getBatchTokenContractInfo()
+
   const [state, setBatchTokenData] = useReducer(reducer, {
     sendType: 'simple',
     nextClick: false,
@@ -83,120 +86,8 @@ export default function BatchTokenSender() {
       errs: [{} as errType],
     } as addrErrType,
     simpleNumber: 0,
-    supportChains: [
-      {
-        id: 43113,
-        name: 'Avalanch',
-        token: 'AVAX',
-        contractAddress: '0x94253f7AB560Ac9de9734c25eFee6FCa24310408',
-        tokenOptions: [
-          {
-            label: 'AVAX',
-            value: 'AVAX',
-          },
-          {
-            label: 'USDC',
-            value: '12312312',
-          },
-        ],
-      },
-      {
-        id: 97,
-        name: 'BSC',
-        token: 'BNB',
-        contractAddress: '0x03e07E3d286ef396C997d75F838b436474B6826F',
-        tokenOptions: [
-          {
-            label: 'BNB',
-            value: 'BNB',
-          },
-        ],
-      },
-      {
-        id: 1,
-        name: 'ETH',
-        token: 'ETH',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'ETH',
-            value: 'ETH',
-          },
-        ],
-      },
-      {
-        id: 137,
-        name: 'Polygon',
-        token: 'MATIC',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'MATIC',
-            value: 'MATIC',
-          },
-        ],
-      },
-      {
-        id: 42161,
-        name: 'Arbitru',
-        token: 'ETH',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'ETH',
-            value: 'ETH',
-          },
-        ],
-      },
-      {
-        id: 10,
-        name: 'Optimism',
-        token: 'ETH',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'ETH',
-            value: 'ETH',
-          },
-        ],
-      },
-      {
-        id: 250,
-        name: 'Fantom',
-        token: 'FTM',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'FTM',
-            value: 'FTM',
-          },
-        ],
-      },
-      {
-        id: 1337,
-        name: 'Geth Testnet',
-        token: 'ETH',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'ETH',
-            value: 'ETH',
-          },
-        ],
-      },
-      {
-        id: 66,
-        name: 'OKC',
-        token: 'OKT',
-        contractAddress: '',
-        tokenOptions: [
-          {
-            label: 'OKT',
-            value: 'OKT',
-          },
-        ],
-      },
-    ],
+    supportChains: supportChains,
+    txn: [] as Array<string>,
   } as BatchTokenContextType)
 
   return (

@@ -25,7 +25,8 @@ export interface BatchTokenContextType {
   operationType: string
   addrErr: addrErrType
   simpleNumber: number
-  supportChains: supportChainsType[]
+  supportChains: batchTokenContractInfoType[]
+  txn: Array<string>
 }
 
 export interface errType {
@@ -45,15 +46,55 @@ export interface IJsonRPCError {
   readonly data: any
 }
 
-export interface supportChainsType {
+export interface CoinType {
+  name: string
+  address: string
+  decimals?: number
+}
+
+/* export interface supportChainsType {
   id: number
   name: string
   token: string
   contractAddress: string
   tokenOptions: tokenOptionTypes[]
-}
+} */
 
 export interface tokenOptionTypes {
   label: string
   value?: string
+}
+
+export interface supportChainType {
+  id: number
+  name: string
+  token: string
+}
+
+export interface contractInfoType {
+  contractAddress: `0x${string}`
+  swaprouterContract: string
+  staableCoin: CoinType
+  WToken: CoinType
+  Faucet: string
+}
+
+export interface contractInfosType {
+  [key: number]: contractInfoType
+}
+
+export interface batchTokenContractInfoType {
+  id: number
+  name: string
+  token: string
+  contractAddress: string
+  tokenOptions: [
+    {
+      label: string
+      value: string
+    }
+  ]
+}
+export interface batchTokenContractInfosType {
+  [key: number]: batchTokenContractInfoType
 }

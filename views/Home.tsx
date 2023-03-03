@@ -128,24 +128,24 @@ export default function Home() {
             <hr className="mb-6" />
             <ul className="h-20 mb-10">
               <li>
-                {' '}
                 <i className="bg-red-500"></i> Get gas of any blockchain in 1
                 click
               </li>
               <li>
-                {' '}
-                <i className="bg-red-500"></i> Get gas of any blockchain testnet{' '}
+                <i className="bg-red-500"></i> Get gas of any blockchain testnet
               </li>
             </ul>
-            <div
-              className={`bg-white rounded-full btn mb-10 text-red-500 ${style.btn}`}
+            <Link
+              href="/"
+              // href="/gas_station"
+              className={`bg-white text-red-500 rounded-full btn mb-10 ${style.btn}`}
             >
               View
               <img
                 className={style['card-arrow']}
                 src="/images/card-arrow-orange.webp"
               ></img>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

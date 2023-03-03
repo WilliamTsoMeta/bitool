@@ -60,7 +60,23 @@ export default function Header() {
           <div className="hidden navbar-center lg:flex">
             <ul className="px-1 menu menu-horizontal">
               <li className="px-4 font-bold">
-                <a href="#popular">Popular</a>
+                <Link href="/#popular">Popular</Link>
+                {/* <div className="dropdown dropdown-end">
+                  <label tabIndex={0} className="m-1 btn">
+                    Click
+                  </label>
+                  <ul
+                    tabIndex={0}
+                    className="p-2 shadow dropdown-content menu bg-base-100 rounded-box w-52"
+                  >
+                    <li>
+                      <a>Item 1</a>
+                    </li>
+                    <li>
+                      <a>Item 2</a>
+                    </li>
+                  </ul>
+                </div> */}
               </li>
               <li className="px-4 font-bold">
                 <a href="#project_owner">Project owner</a>

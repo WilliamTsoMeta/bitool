@@ -13,7 +13,7 @@ import { fetchBalance } from '@wagmi/core'
 import { useRouter } from 'next/router'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import BatchTokenContext from 'context/BatchTokenContext'
-import { supportChainsType, tokenOptionTypes } from 'types'
+import { batchTokenContractInfoType, tokenOptionTypes } from 'types'
 import { Select, Space } from 'antd'
 import style from 'styles/BatchToken.module.css'
 
@@ -27,13 +27,11 @@ export default function TokenSelector() {
   } = useSwitchNetwork()
   const batchTokenData = useContext(BatchTokenContext)
   const { sendType, setBatchTokenData } = useContext(BatchTokenContext)
+  const { connect, connectors, pendingConnector } = useConnect()
 
   const { chain, chains } = useNetwork()
   const { address, isConnecting, isDisconnected } = useAccount()
-  const { connect } = useConnect({
-    connector: new InjectedConnector(),
-  })
-  // const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
+
   const {
     data: balance,
     isError,
@@ -48,74 +46,84 @@ export default function TokenSelector() {
 
   const supportChains = batchTokenData.supportChains
 
-  const [currentChain, setcurrentChain] = useState({} as supportChainsType)
+  const [currentChain, setcurrentChain] = useState(
+    {} as batchTokenContractInfoType
+  )
   const [tokenAddr, settokenAddr] = useState('')
   const [addrErr, setaddrErr] = useState({ show: false, message: '' })
   const [userBalance, setuserBalance] = useState({ count: '0', unit: 'USDC' })
   const [gasUnit, setgasUnit] = useState('')
   const [tokenOptions, settokenOptions] = useState([{} as tokenOptionTypes])
 
+  let defaultChainId = Number(process.env.NEXT_PUBLIC_DEFAULT_CHAIN)
+  if (typeof window !== 'undefined') {
+    const localChainId = window.localStorage.getItem('defaultChainId')
+
+    if (localChainId && localChainId !== '') {
+      defaultChainId = Number(localChainId)
+    }
+  }
+
   useEffect(() => {
     try {
       let token = ''
-      // console.log(window.location.search.indexOf('chainId') >= 0)
-      if (router.query.chainId) {
+      if (defaultChainId) {
         const chain = supportChains.filter(
-          (value) => value.id === Number(router.query.chainId)
+          (value) => value.id === defaultChainId
         )
         setcurrentChain(chain[0])
         token =
           batchTokenData.tokenAddress !== ''
             ? batchTokenData.tokenAddress
             : chain[0].token
-      } else {
-        setcurrentChain(supportChains[0])
-        token =
-          batchTokenData.tokenAddress !== ''
-            ? batchTokenData.tokenAddress
-            : supportChains[0].token
-        router.push({
-          pathname: '/batch_token_sender',
-          query: { chainId: currentChain.id },
-        })
       }
       settokenAddr(token)
     } catch (error) {
       console.log('error', error)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     setBatchTokenData({
       type: 'UPDATE_CONTRACT_ADDRESS',
       payload: currentChain.contractAddress,
     })
-  }, [currentChain])
+  }, [currentChain, setBatchTokenData])
 
-  function validateChain() {
-    if (currentChain.id !== chain?.id) {
-      console.log('switch network')
-      switchNetworkAsync?.(currentChain.id).then(() => {
-        setBatchTokenData({
-          type: 'UPDATE_CONTRACT_ADDRESS',
-          payload: currentChain.contractAddress,
-        })
+  /*   function validateChain() {
+    try {
+      if (currentChain.id !== chain?.id) {
+        console.log('switch network')
+        console.log('connectors[0]', connectors[0])
+        switchNetworkAsync?.(currentChain.id).then(() => {
+          if (connectors.length > 0) {
+            connect({ connector: connectors[0] })
+          }
+          setBatchTokenData({
+            type: 'UPDATE_CONTRACT_ADDRESS',
+            payload: currentChain.contractAddress,
+          })
 
-        router.push({
-          pathname: '/batch_token_sender',
-          query: { chainId: currentChain.id },
+          router.push({
+            pathname: '/batch_token_sender',
+            query: { chainId: currentChain.id },
+          })
         })
-      })
+      }
+    } catch (error) {
+      console.log('error', error)
     }
-  }
+  } 
 
   useEffect(() => {
     // switch network
     validateChain()
   }, [currentChain, chain, switchNetworkAsync])
 
+  */
+
   useEffect(() => {
-    if (balance) {
+    if (balance && !batchTokenData.tokenAddress) {
       console.log('balance', balance)
       setuserBalance({
         count: Number(balance.formatted).toFixed(2).toString(),
@@ -135,14 +143,14 @@ export default function TokenSelector() {
   }, [balance, currentChain])
 
   function chainChange(value: string) {
-    // if (!isDisconnected) {
-    //   connect()
-    // }
-    console.log('value', value)
+    console.log('chainChange', value)
     const chain = supportChains.filter((chain) => chain.name === value)
     setcurrentChain(chain[0])
     settokenAddr(chain[0].token)
     // url param will changed after wallet chain changed
+    switchNetworkAsync?.(chain[0].id).then(() => {
+      localStorage.setItem('defaultChainId', chain[0].id.toString())
+    })
   }
 
   async function getUserBalance(tokenAddr: any) {
@@ -174,26 +182,6 @@ export default function TokenSelector() {
     }
   }
 
-  async function changeTokenAntUI(value: any) {
-    const val = value[0] ?? ''
-    settokenAddr(val)
-    console.log('value', val, currentChain.token)
-    try {
-      if (val !== currentChain.token) {
-        const validAddr = await getAddress(val)
-        await getUserBalance(val)
-        setBatchTokenData({
-          type: 'UPDATE_TOKEN_ADDRESS',
-          payload: val,
-        })
-      }
-      setaddrErr({ show: false, message: '' })
-    } catch (error) {
-      setaddrErr({ show: true, message: 'unavailable address' })
-    }
-    // todo validate token address
-  }
-
   async function changeToken(e: React.ChangeEvent<HTMLInputElement>) {
     settokenAddr(e.target.value)
     try {
@@ -212,6 +200,15 @@ export default function TokenSelector() {
     }
     // todo validate token address
   }
+
+  useEffect(() => {
+    const getBan = async () => {
+      if (batchTokenData.tokenAddress) {
+        await getUserBalance(batchTokenData.tokenAddress)
+      }
+    }
+    getBan()
+  }, [batchTokenData.tokenAddress])
 
   async function focusToken(value: any) {
     console.log('value', value)
@@ -238,8 +235,8 @@ export default function TokenSelector() {
       </div>
       <div className={`grid grid-cols-3 mt-5 gap-7`}>
         <div className={`w-ful ${style.chooseChain}`}>
-          {currentChain.name && (
-            <Select defaultValue={currentChain.name} onChange={chainChange}>
+          {currentChain && currentChain.name && (
+            <Select value={currentChain.name} onChange={chainChange}>
               {supportChains.map((chain) => {
                 return (
                   <Option value={chain.name} label={chain.name} key={chain.id}>

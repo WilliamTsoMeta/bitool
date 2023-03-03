@@ -1,5 +1,6 @@
 import { useFeeData, useContract, useAccount } from 'wagmi'
 import multiSenderABI from 'abi/multiSender.json'
+import gasStation from 'abi/gasStation.json'
 import { useSigner, useProvider } from 'wagmi'
 
 export function BatchTokenContract(contractAddress: string) {
@@ -7,6 +8,15 @@ export function BatchTokenContract(contractAddress: string) {
   return useContract({
     address: contractAddress, //'0x94253f7AB560Ac9de9734c25eFee6FCa24310408',
     abi: multiSenderABI,
+    signerOrProvider: provider,
+  })
+}
+
+export function GasStationContract(contractAddress: string) {
+  const provider = useProvider()
+  return useContract({
+    address: contractAddress,
+    abi: gasStation,
     signerOrProvider: provider,
   })
 }
