@@ -67,7 +67,7 @@ export default function Home() {
             </ul>
 
             <Link
-              href="/"
+              href="/batch_token_sender"
               className={`bg-white text-black rounded-full btn mb-10 ${style.btn}`}
             >
               View
