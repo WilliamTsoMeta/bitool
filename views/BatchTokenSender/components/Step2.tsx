@@ -53,7 +53,7 @@ export default function Step2() {
 
         getEstimation(contract).then((estimation) => {
           if (gasFee?.gasPrice && estimation) {
-            console.log('gasFee', gasFee)
+            console.log('gasFee', Number(gasFee?.gasPrice))
             let gasPrice = BigNumber.from(gasFee?.gasPrice)
             let estmationB = BigNumber.from(estimation)
 
@@ -313,8 +313,8 @@ export default function Step2() {
           txn = await contract?.connect(signer as any).sendMultiETH(addr, amn, {
             value: sumAmn,
             gasLimit: estimateGasOrg[index],
-            maxFeePerGas: gasFee?.maxFeePerGas,
-            maxPriorityFeePerGas: gasFee?.maxPriorityFeePerGas,
+            // maxFeePerGas: gasFee?.maxFeePerGas,
+            // maxPriorityFeePerGas: gasFee?.maxPriorityFeePerGas,
           })
           result = await txn.wait()
         } else {
@@ -323,8 +323,8 @@ export default function Step2() {
             ?.connect(signer as any)
             .sendMultiERC20(batchTokenData.tokenAddress, addr, amn, {
               gasLimit: estimateGasOrg[index],
-              maxFeePerGas: gasFee?.maxFeePerGas,
-              maxPriorityFeePerGas: gasFee?.maxPriorityFeePerGas,
+              // maxFeePerGas: gasFee?.maxFeePerGas,
+              // maxPriorityFeePerGas: gasFee?.maxPriorityFeePerGas,
             })
           result = await txn.wait()
         }
