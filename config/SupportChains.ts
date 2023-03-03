@@ -199,7 +199,7 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
       id: 43114,
       name: 'Avalanch',
       token: 'AVAX',
-      contractAddress: '0x94253f7AB560Ac9de9734c25eFee6FCa24310408',
+      contractAddress: '0x7AA17814Fa1048919a197522690502Bd63809518',
       tokenOptions: [
         {
           label: 'AVAX',
@@ -211,7 +211,7 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
       id: 56,
       name: 'BSC',
       token: 'BNB',
-      contractAddress: '0x03e07E3d286ef396C997d75F838b436474B6826F',
+      contractAddress: '0x246ecfcb12f4BE8f6b2EC398E5F1DcFE80e630a4',
       tokenOptions: [
         {
           label: 'BNB',
@@ -223,7 +223,7 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
       id: 1,
       name: 'ETH',
       token: 'ETH',
-      contractAddress: '',
+      contractAddress: '0x246ecfcb12f4BE8f6b2EC398E5F1DcFE80e630a4',
       tokenOptions: [
         {
           label: 'ETH',
@@ -235,7 +235,7 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
       id: 137,
       name: 'Polygon',
       token: 'MATIC',
-      contractAddress: '',
+      contractAddress: '0x7AA17814Fa1048919a197522690502Bd63809518',
       tokenOptions: [
         {
           label: 'MATIC',
@@ -245,9 +245,9 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
     },
     {
       id: 42161,
-      name: 'Arbitru',
+      name: 'Arbitrum',
       token: 'ETH',
-      contractAddress: '',
+      contractAddress: '0x246ecfcb12f4BE8f6b2EC398E5F1DcFE80e630a4',
       tokenOptions: [
         {
           label: 'ETH',
@@ -259,7 +259,7 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
       id: 10,
       name: 'Optimism',
       token: 'ETH',
-      contractAddress: '',
+      contractAddress: '0x246ecfcb12f4BE8f6b2EC398E5F1DcFE80e630a4',
       tokenOptions: [
         {
           label: 'ETH',
@@ -271,7 +271,7 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
       id: 250,
       name: 'Fantom',
       token: 'FTM',
-      contractAddress: '',
+      contractAddress: '0x7AA17814Fa1048919a197522690502Bd63809518',
       tokenOptions: [
         {
           label: 'FTM',
@@ -279,17 +279,17 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
         },
       ],
     },
-    {
-      id: 66,
-      name: 'OKC',
-      token: 'OKT',
-      contractAddress: '',
-      tokenOptions: [
-        {
-          label: 'OKT',
-          value: 'OKT',
-        },
-      ],
-    },
+    // {
+    //   id: 66,
+    //   name: 'OKC',
+    //   token: 'OKT',
+    //   contractAddress: '',
+    //   tokenOptions: [
+    //     {
+    //       label: 'OKT',
+    //       value: 'OKT',
+    //     },
+    //   ],
+    // },
   ]
 }
