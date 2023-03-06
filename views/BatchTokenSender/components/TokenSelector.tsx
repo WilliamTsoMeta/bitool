@@ -123,8 +123,7 @@ export default function TokenSelector() {
   */
 
   useEffect(() => {
-    if (balance && !batchTokenData.tokenAddress) {
-      console.log('balance', balance)
+    if (balance) {
       setuserBalance({
         count: Number(balance.formatted).toFixed(2).toString(),
         unit: balance.symbol,
@@ -143,17 +142,16 @@ export default function TokenSelector() {
   }, [balance, currentChain])
 
   function chainChange(value: string) {
-    console.log('chainChange', value)
     const chain = supportChains.filter((chain) => chain.name === value)
-    setcurrentChain(chain[0])
-    settokenAddr(chain[0].token)
     // url param will changed after wallet chain changed
     switchNetworkAsync?.(chain[0].id).then(() => {
       localStorage.setItem('defaultChainId', chain[0].id.toString())
+      setcurrentChain(chain[0])
+      settokenAddr(chain[0].token)
     })
   }
 
-  async function getUserBalance(tokenAddr: any) {
+  async function getUserBalance(tokenAddr?: any) {
     if (chain) {
       try {
         const balance = await fetchBalance({
@@ -217,6 +215,10 @@ export default function TokenSelector() {
   async function tokenBlur() {
     if (tokenAddr === '') {
       settokenAddr(currentChain.token)
+      setuserBalance({
+        count: Number(balance?.formatted).toFixed(2).toString(),
+        unit: balance?.symbol ?? '',
+      })
       setaddrErr({ show: false, message: '' })
     }
   }
