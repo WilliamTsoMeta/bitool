@@ -6,9 +6,10 @@ import { MainNet } from './components/MainNet'
 import { TestNet } from './components/TestNet'
 import { getGasStationContractInfo } from 'config/SupportChains'
 import getSupportChains from 'config/SupportChainsWagmi'
+import { Chain } from 'wagmi'
 const GasStationIndex = () => {
   const [sendType, setsendType] = useState('main')
-  const [supportChains, setsupportChains] = useState(getSupportChains())
+  const [supportChains, setsupportChains] = useState([] as any)
   const [gasStationContractInfo, setgasStationContractInfo] = useState(
     getGasStationContractInfo()
   )
@@ -16,6 +17,20 @@ const GasStationIndex = () => {
   function toggleOperationType(type: string) {
     setsendType(sendType === 'main' ? 'test' : 'main')
   }
+
+  useEffect(() => {
+    const chains = getSupportChains()
+    const newChains = []
+    for (let index = 0; index < chains.length; index++) {
+      const element = chains[index]
+      if (
+        Object.keys(gasStationContractInfo).includes(element?.id.toString())
+      ) {
+        newChains.push(element)
+      }
+    }
+    setsupportChains(newChains)
+  }, [])
 
   return (
     <>
@@ -25,15 +40,16 @@ const GasStationIndex = () => {
           <h2 className="mt-12 text-5xl font-bold">Gas Station</h2>
           <p className="mt-11 mb-7">Chain Supported</p>
           <div className="flex w-4/6 mb-14 justify-evenly">
-            {supportChains.map((chain) => (
-              <Image
-                src={`/images/support_chains/${chain.id}.png`}
-                width={44}
-                height={44}
-                alt="chains"
-                key={chain.id}
-              />
-            ))}
+            {supportChains.length > 0 &&
+              supportChains.map((chain: any) => (
+                <Image
+                  src={`/images/support_chains/${chain.id}.png`}
+                  width={44}
+                  height={44}
+                  alt="chains"
+                  key={chain.id}
+                />
+              ))}
           </div>
           <div className="flex bg-gray-200 border rounded-full cursor-pointer select-none">
             <div
