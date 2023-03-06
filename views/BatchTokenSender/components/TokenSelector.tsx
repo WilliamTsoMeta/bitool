@@ -86,7 +86,7 @@ export default function TokenSelector() {
   useEffect(() => {
     setBatchTokenData({
       type: 'UPDATE_CONTRACT_ADDRESS',
-      payload: currentChain.contractAddress,
+      payload: currentChain?.contractAddress,
     })
   }, [currentChain, setBatchTokenData])
 
