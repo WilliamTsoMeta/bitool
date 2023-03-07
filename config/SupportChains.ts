@@ -38,7 +38,7 @@ export function getGasStationContractInfo(): contractInfosType {
   }
   return {
     // 43114: {
-    //   contractAddress: '', //faucet
+    //   contractAddress: '0x7AA17814Fa1048919a197522690502Bd63809518', //faucet
     //   swaprouterContract: '', //fake
     //   staableCoin: {
     //     name: 'USDT',

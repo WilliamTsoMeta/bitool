@@ -391,6 +391,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               key="receiver"
               onChainChange={receivingChainChange}
               label="token"
+              chainStorageName="defaultChainId_gas_station"
             ></SelectChain>
           )}
         </div>
@@ -453,6 +454,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               onChainChange={paymentChainChange}
               invokeWallet={true}
               key="payer"
+              chainStorageName="defaultChainId_gas_station"
             ></SelectChain>
           )}
 
