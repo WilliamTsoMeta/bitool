@@ -14,6 +14,10 @@ import { Chain } from 'wagmi'
 import * as ga from '../lib/ga'
 import { useRouter } from 'next/router'
 
+import VConsole from 'vconsole'
+const vConsole = new VConsole()
+console.log('Hello world')
+
 const chainArr = getSupportChains()
 
 const { chains, provider, webSocketProvider } = configureChains(
