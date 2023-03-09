@@ -20,6 +20,7 @@ interface Props {
   onChainChange: Function
   invokeWallet?: boolean
   label?: string
+  chainStorageName?: string
 }
 export default function SelectChain(props: Props) {
   const { setContext } = useContext(Context)
@@ -75,7 +76,10 @@ export default function SelectChain(props: Props) {
       // url param will changed after wallet chain changed
       if (props.invokeWallet && selectChain[0].id !== chain?.id) {
         await switchNetworkAsync?.(selectChain[0].id).then(() => {
-          localStorage.setItem('defaultChainId', selectChain[0].id.toString())
+          localStorage.setItem(
+            props.chainStorageName ?? 'defaultChainId',
+            selectChain[0].id.toString()
+          )
         })
       }
       setcurrentChain(selectChain[0])

@@ -7,6 +7,7 @@ import React, {
   ReactEventHandler,
   ChangeEventHandler,
 } from 'react'
+import { BigNumber } from 'ethers'
 import SelectChain from 'components/SelectChain'
 import Image from 'next/image'
 import { contractInfosType } from 'types'
@@ -18,10 +19,11 @@ import gasStation from 'abi/gasStation.json'
 import swapRouterABI from 'abi/swapRouter.json'
 import { useSigner, useProvider } from 'wagmi'
 import useAllowance from 'hooks/useAllowance'
-import { erc20ABI } from 'wagmi'
+import { erc20ABI, useFeeData } from 'wagmi'
 import { parseUnits, isAddress, formatUnits } from 'ethers/lib/utils.js'
 import Context from 'context/Context'
 import { getProvider } from '@wagmi/core'
+import { fetchFeeData } from '@wagmi/core'
 
 export interface MainNetProps {
   gasStationContractInfo: contractInfosType
@@ -34,6 +36,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     isConnected,
   } = useAccount()
   const { chain, chains } = useNetwork()
+  // const { data: gasFee, isError, isLoading } = useFeeData()
   // const { connect, connectors, error, isLoading, pendingConnector } =
   //   useConnect({ connector: new InjectedConnector() })
 
@@ -44,6 +47,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     amount: '', //usdt
     address: '',
   })
+  const [gasEstimation, setgasEstimation] = useState('0')
 
   const { data: signer } = useSigner()
   useAccount
@@ -80,8 +84,12 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   }, [isConnected, activeConnector, setContext])
 
   useEffect(() => {
-    if (chains && chains[0]?.id !== 1) {
-      setchainsW(chains)
+    let chainsSupp = chains.filter((chain: Chain) => {
+      return Object.keys(gasStationContractInfo).includes(chain.id.toString())
+    })
+    if (chainsW.length === 0 && chainsSupp && chainsSupp[0]?.id !== 1) {
+      // why this? Forgot!!
+      setchainsW(chainsSupp)
     }
 
     if (chain) {
@@ -91,7 +99,9 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       if (tokenSymbol === '') {
         settokenSymbol(chain?.nativeCurrency?.symbol)
       }
-      setchainW(chain)
+      if (Object.keys(chainW).length === 0) {
+        setchainW(chain)
+      }
       setpayChain(chain)
     }
   }, [chain, chains, receiverInfo])
@@ -165,6 +175,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
   const receivingChainChange = (chain: Chain) => {
     settokenSymbol(chain?.nativeCurrency?.symbol)
+    console.log('chain', chain)
     setreceiverInfo({ ...receiverInfo, amount: '', chain })
     setgetTokenCount('0')
   }
@@ -184,7 +195,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
     console.log('receiverInfo.chain.id', receiverInfo.chain.id)
 
-    console.log('swapRouterContract', swapRouterContract.address)
     const nativeCurrencyAmn = await swapRouterContract.getAmountsOut(
       parseUnits(amount.toString(), decimals).toString(),
       [
@@ -193,7 +203,28 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       ]
     )
 
-    return formatUnits(nativeCurrencyAmn[1], wtokenDecimals).toString()
+    // if (receiverInfo.address) {
+    const gasFee = await fetchFeeData({
+      chainId: receiverInfo.chain.id,
+    })
+
+    let gasPrice = BigNumber.from(gasFee?.gasPrice)
+    // let estmationB = BigNumber.from(estimation)
+    console.log('gasPrice', Number(gasPrice), 250000)
+    let estmationB = BigNumber.from(250000)
+    let gasEstimationNum = gasPrice.mul(estmationB)
+    setgasEstimation(formatUnits(gasEstimationNum, wtokenDecimals))
+    // }
+    console.log(
+      'gasEstimationNum',
+      Number(gasEstimationNum),
+      Number(nativeCurrencyAmn[1])
+    )
+
+    return formatUnits(
+      nativeCurrencyAmn[1].sub(gasEstimationNum),
+      wtokenDecimals
+    ).toString()
   }
 
   const receiveAmnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,6 +234,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       settokenLoading(true)
       clearTimeout(timer)
       const timerLocal = setTimeout(async () => {
+        const receiVerProvider = getProvider({ chainId: receiverInfo.chain.id })
         try {
           const curNum = await calcalNativeCurrency(amount)
           setgetTokenCount(curNum)
@@ -238,9 +270,16 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     let amount = orgAmn * toWei
     let message
     let err = false
-    if (orgAmn < 1 || orgAmn > 10) {
-      message = 'Please check your form, Amount should be $1-$10'
-      err = true
+    if (receiverInfo.chain.id === 1 || receiverInfo.chain.id === 97) {
+      if (orgAmn < 5 || orgAmn > 10) {
+        message = 'Please check your form, Amount should be $5-$10'
+        err = true
+      }
+    } else {
+      if (orgAmn < 1 || orgAmn > 10) {
+        message = 'Please check your form, Amount should be $1-$10'
+        err = true
+      }
     }
 
     if (!isAddress(receiverInfo.address)) {
@@ -352,11 +391,18 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               key="receiver"
               onChainChange={receivingChainChange}
               label="token"
+              chainStorageName="defaultChainId_gas_station"
             ></SelectChain>
           )}
         </div>
         <p className="my-2 font-semibold">
-          How much you want to buy?(Range 1-10 USDT)
+          How much you want to buy?(Range{' '}
+          <span className="text-red-500">
+            {receiverInfo.chain.id === 1 || receiverInfo.chain.id === 97
+              ? '5-10'
+              : '1-10'}
+          </span>{' '}
+          USDT)
         </p>
         <div className="flex w-full">
           <div className="flex items-center pl-2 text-black border border-gray-300 rounded">
@@ -368,7 +414,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               onChange={receiveAmnChange}
               value={receiverInfo.amount}
               onFocus={receiveAmnFocus}
-              pattern="^([1-9]|10)$"
             />
           </div>
 
@@ -377,9 +422,16 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
             {tokenLoading ? (
               <button className="text-black bg-white border-0 btn btn-square loading"></button>
             ) : (
-              getTokenCount
+              getTokenCount.slice(0, 10)
             )}{' '}
             {tokenSymbol}
+            {getTokenCount.length > 0 &&
+              allowance > 2 &&
+              receiverInfo.address && (
+                <span className="ml-auto">
+                  Gas estimation: {gasEstimation.slice(0, 7)} {tokenSymbol}
+                </span>
+              )}
           </div>
         </div>
         <input
@@ -402,6 +454,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
               onChainChange={paymentChainChange}
               invokeWallet={true}
               key="payer"
+              chainStorageName="defaultChainId_gas_station"
             ></SelectChain>
           )}
 

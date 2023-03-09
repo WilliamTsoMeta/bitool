@@ -22,8 +22,12 @@ export function TestNet({ gasStationContractInfo }: MainNetProps) {
   const [chainsW, setchainsW] = useState([] as Chain[])
 
   useEffect(() => {
-    if (chains && chains[0]?.id !== 1) {
-      setchainsW(chains)
+    let chainsSupp = chains.filter((chain: Chain) => {
+      return Object.keys(gasStationContractInfo).includes(chain.id.toString())
+    })
+    if (chainsW.length === 0 && chainsSupp && chainsSupp[0]?.id !== 1) {
+      // why this? Forgot!!
+      setchainsW(chainsSupp)
     }
 
     if (chain) {
@@ -49,7 +53,7 @@ export function TestNet({ gasStationContractInfo }: MainNetProps) {
                 </span>
               </div>
               <Link
-                href={gasStationContractInfo[chain.id].Faucet}
+                href={gasStationContractInfo[chain.id]?.Faucet ?? ''}
                 className="col-span-1"
                 target="_blank"
               >

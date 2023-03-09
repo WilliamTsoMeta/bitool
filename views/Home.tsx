@@ -137,7 +137,7 @@ export default function Home() {
             </ul>
             <Link
               href="/"
-              // href="/gas_station"
+              // /gas_station
               className={`bg-white text-red-500 rounded-full btn mb-10 ${style.btn}`}
             >
               View
