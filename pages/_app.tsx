@@ -9,14 +9,15 @@ import Context from 'context/Context'
 import { ContextType } from 'types'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
+import { OKXWalletConnector } from 'config/Connectors/OKXWallet'
 import getSupportChains from 'config/SupportChainsWagmi'
 import { Chain } from 'wagmi'
 import * as ga from '../lib/ga'
 import { useRouter } from 'next/router'
 
-import VConsole from 'vconsole'
+/* import VConsole from 'vconsole'
 const vConsole = new VConsole()
-console.log('Hello world')
+console.log('Hello world') */
 
 const chainArr = getSupportChains()
 
@@ -35,6 +36,9 @@ const client = createClient({
         shimDisconnect: true,
         shimChainChangedDisconnect: false,
       },
+    }),
+    new OKXWalletConnector({
+      chains,
     }),
     /* new InjectedConnector({
       chains,

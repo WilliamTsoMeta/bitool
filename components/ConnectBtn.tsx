@@ -66,19 +66,23 @@ export default function ConnectBtn() {
   }
 
   useEffect(() => {
-    connect({ connector: connectors[0] })
-    console.log('chain.id change', chain?.id)
+    let con = activeConnector ?? connectors[0]
+    console.log('con-watch chain', con)
+    connect({ connector: con })
+
     validateChain()
   }, [chain, chain?.id])
 
   useEffect(() => {
-    connect({ connector: connectors[0] })
+    let con = activeConnector ?? connectors[0]
+    console.log('con', con)
+    connect({ connector: con })
   }, [])
 
   // ANCHOR methods
 
   // ANCHOR childs
-  /*   function ConnectorList() {
+  function ConnectorList() {
     if (mounted) {
       return (
         <div>
@@ -90,25 +94,28 @@ export default function ConnectBtn() {
                   key={connector.id}
                   onClick={() => connect({ connector })}
                 >
-                  {connector.name}
-                  {!connector.ready && ' (unsupported)'}
-                  {isLoading &&
-                    connector.id === pendingConnector?.id &&
-                    ' (connecting)'}
+                  <span>{connector.name}</span>
+
+                  {/* <span className="text-xs">
+                    {!connector.ready && ' (unsupported)'}
+                    {isLoading &&
+                      connector.id === pendingConnector?.id &&
+                      ' (connecting)'}
+                  </span> */}
                 </button>
               </li>
             )
           })}
 
-          <span>{error && <div>{error.message}</div>}</span>
+          {/* <span className="text-xs">{error && <div>{error.message}</div>}</span> */}
         </div>
       )
     } else {
       return ''
     }
-  } */
+  }
 
-  if (connected) {
+  if (connected && address) {
     return (
       <div className={`bg-black rounded-full btn`} onClick={() => disconnect()}>
         <Image
@@ -118,6 +125,7 @@ export default function ConnectBtn() {
           height={18}
           className="mr-2"
         />
+
         <span>{address?.slice(0, 4) + '...' + address?.slice(-4)}</span>
       </div>
     )
@@ -127,7 +135,7 @@ export default function ConnectBtn() {
         {connectors[0] && (
           <div
             className={`btn bg-black rounded-full`}
-            onClick={() => connect({ connector: connectors[0] })}
+            // onClick={() => connect({ connector: connectors[0] })}
           >
             <Image
               src="/images/wallet.webp"
@@ -137,9 +145,9 @@ export default function ConnectBtn() {
               className="mr-2"
             />
             <span>Connect Wallet</span>
-            {/* <ul className="pt-5 shadow dropdown-content menu rounded-box w-52 bg-slate-800">
-            {ConnectorList()}
-          </ul> */}
+            <ul className="bg-black shadow dropdown-content menu rounded-box w-52">
+              {ConnectorList()}
+            </ul>
           </div>
         )}
       </div>
