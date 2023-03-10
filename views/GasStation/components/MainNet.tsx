@@ -20,7 +20,12 @@ import swapRouterABI from 'abi/swapRouter.json'
 import { useSigner, useProvider } from 'wagmi'
 import useAllowance from 'hooks/useAllowance'
 import { erc20ABI, useFeeData } from 'wagmi'
-import { parseUnits, isAddress, formatUnits } from 'ethers/lib/utils.js'
+import {
+  parseUnits,
+  isAddress,
+  formatUnits,
+  formatEther,
+} from 'ethers/lib/utils.js'
 import Context from 'context/Context'
 import { getProvider } from '@wagmi/core'
 import { fetchFeeData } from '@wagmi/core'
@@ -58,6 +63,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     {} as any
   )
   const [chainW, setchainW] = useState({} as Chain)
+  const [chainWReceiver, setchainWReceiver] = useState({} as Chain)
   const [chainsW, setchainsW] = useState([] as Chain[])
   const [payChain, setpayChain] = useState({} as Chain)
   const [getTokenCount, setgetTokenCount] = useState('0')
@@ -93,8 +99,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     }
 
     if (chain) {
-      console.log('receiverInfo.chain.id', receiverInfo.chain.id)
-
       if (chainsW) {
         //check if current chain is support chain
         const exist = chainsW.filter((value) => {
@@ -104,15 +108,35 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           if (tokenSymbol === '') {
             settokenSymbol(chain?.nativeCurrency?.symbol)
           }
-          if (!receiverInfo.chain.id) {
-            setreceiverInfo({ ...receiverInfo, chain })
-          }
         }
       }
 
-      if (Object.keys(chainW).length === 0 || chain.id !== chainW.id) {
-        setchainW(chain)
+      if (Object.keys(chainWReceiver).length > 0) {
+        if (!receiverInfo.chain.id) {
+          setreceiverInfo({ ...receiverInfo, chain: chainWReceiver })
+        }
       }
+
+      if (
+        Object.keys(chainW).length === 0 ||
+        Object.keys(chainWReceiver).length === 0
+      ) {
+        setchainW(chain)
+        setchainWReceiver(chain)
+        setreceiverInfo({ ...receiverInfo, chain })
+      }
+
+      if (chain.id !== chainW.id) {
+        setchainW(chain)
+        const exist = chainsW.filter((value) => {
+          return chainW.id === value.id
+        })
+        if (exist.length <= 0) {
+          setchainWReceiver(chain)
+          setreceiverInfo({ ...receiverInfo, chain })
+        }
+      }
+
       setpayChain(chain)
     }
   }, [chain, chain?.id, chains, receiverInfo])
@@ -142,7 +166,12 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
         userAddress as `0x${string}`,
         signer
       ).then((allowance) => {
-        setallowance(allowance)
+        // BigNumber.from(BigInt(allowance))
+        let allow = formatUnits(
+          BigInt(allowance).toString(),
+          payChain.nativeCurrency.decimals
+        )
+        setallowance(Number(allow))
       })
     }
   }, [gasStationContractInfo, payChain.id, signer, userAddress])
@@ -189,6 +218,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     settokenSymbol(chain?.nativeCurrency?.symbol)
     setreceiverInfo({ ...receiverInfo, amount: '', chain })
     setgetTokenCount('0')
+    setchainWReceiver(chain)
   }
 
   const paymentChainChange = (chain: Chain) => {
@@ -203,8 +233,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       gasStationContractInfo[receiverInfo.chain.id].staableCoin?.decimals
     const wtokenDecimals =
       gasStationContractInfo[receiverInfo.chain.id].WToken?.decimals
-
-    console.log('receiverInfo.chain.id', receiverInfo.chain.id)
 
     const nativeCurrencyAmn = await swapRouterContract.getAmountsOut(
       parseUnits(amount.toString(), decimals).toString(),
@@ -285,8 +313,8 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       }
     }
 
-    if (!isAddress(receiverInfo.address)) {
-      message = 'Please check your form, Receiving address'
+    if (!orgAmn || orgAmn <= 0) {
+      message = 'Please check your form, amount'
       err = true
     }
 
@@ -305,58 +333,58 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     }
 
     setpaying(true)
-    const txn = await gasStationContract.deposit(
-      amount.toString(),
-      receiverInfo.chain.id,
-      receiverInfo.address
-    )
 
-    let tries = 1
-
-    console.log('receiverInfo.chain.id,', receiverInfo.chain.id)
-    console.log(
-      'gasStationReceiverContract.address',
-      gasStationReceiverContract.address,
-      gasStationReceiverContract.provider
-    )
-    console.log(
-      'receiverInfo.chain.id, txn.hash',
-      receiverInfo.chain.id,
-      txn.hash
-    )
-    let timer = setInterval(async () => {
-      const result = await gasStationReceiverContract.state(
-        payChain.id,
-        txn.hash
+    try {
+      console.log(
+        amount.toString(),
+        receiverInfo.chain.id,
+        receiverInfo.address
       )
-      console.log('result', result)
-      if (result) {
+      let txn: any
+      txn = await gasStationContract.deposit(
+        amount.toString(),
+        receiverInfo.chain.id,
+        receiverInfo.address
+      )
+      let tries = 1
+
+      let timer = setInterval(async () => {
+        const result = await gasStationReceiverContract.state(
+          payChain.id,
+          txn.hash
+        )
         console.log('result', result)
-        setContext({
-          type: 'SET_ALERT',
-          payload: {
-            type: 'alert-success',
-            message: 'Successed',
-            show: true,
-          },
-        })
-        setpaying(false)
-        clearInterval(timer)
-      }
-      tries += 1
-      if (tries > 500) {
-        setContext({
-          type: 'SET_ALERT',
-          payload: {
-            type: 'alert-error',
-            message: 'get gas error please cotact us',
-            show: true,
-          },
-        })
-        clearInterval(timer)
-        setpaying(false)
-      }
-    }, 2000)
+        if (result) {
+          console.log('result', result)
+          setContext({
+            type: 'SET_ALERT',
+            payload: {
+              type: 'alert-success',
+              message: 'Successed',
+              show: true,
+            },
+          })
+          setpaying(false)
+          clearInterval(timer)
+        }
+        tries += 1
+        if (tries > 100) {
+          setContext({
+            type: 'SET_ALERT',
+            payload: {
+              type: 'alert-error',
+              message:
+                'Failed to get gas.please cotact us and provide your trasaction hash',
+              show: true,
+            },
+          })
+          clearInterval(timer)
+          setpaying(false)
+        }
+      }, 2000)
+    } catch (error) {
+      setpaying(false)
+    }
   }
 
   const approve = async () => {
@@ -372,10 +400,10 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           ?.connect(signer)
           .approve(
             gasStationContractInfo[payChain.id].contractAddress,
-            parseUnits('90000000', payChain.nativeCurrency.decimals)
+            parseUnits('9', payChain.nativeCurrency.decimals)
           )
         ap.wait()
-        setallowance(90000000)
+        setallowance(9)
       }
     } catch (error) {
       console.log('approve error', error)
@@ -387,11 +415,12 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       <div className="container max-w-2xl px-5 mx-auto mt-10 mb-96 lg:px-0">
         <p className="my-2 font-semibold">What kind of gas do you want?</p>
         <div className="flex w-full">
-          {chainW && chainsW.length > 0 && (
+          {chainWReceiver && chainsW.length > 0 && (
             <SelectChain
               supportChains={chainsW}
-              defaultChain={chainW}
+              defaultChain={chainWReceiver}
               key="receiver"
+              key2="receiver"
               onChainChange={receivingChainChange}
               label="token"
               chainStorageName="defaultChainId_gas_station"

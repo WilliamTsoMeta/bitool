@@ -21,6 +21,7 @@ interface Props {
   invokeWallet?: boolean
   label?: string
   chainStorageName?: string
+  key2?: string
 }
 export default function SelectChain(props: Props) {
   const { setContext } = useContext(Context)
@@ -63,7 +64,7 @@ export default function SelectChain(props: Props) {
       const exist = props.supportChains.filter((value) => {
         return props.defaultChain.id === value.id
       })
-      console.log('exist', exist, props.defaultChain.id)
+      console.log('exist', exist, props.defaultChain.id, 'key', props.key2)
       exist.length === 0 ? setnotSupport(true) : setnotSupport(false)
     }
     setcurrentChain(props.defaultChain)
