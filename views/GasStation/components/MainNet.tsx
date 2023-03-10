@@ -381,7 +381,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
   return (
     <>
-      <div className="container max-w-2xl mx-auto mt-10 mb-96">
+      <div className="container max-w-2xl px-5 mx-auto mt-10 mb-96 lg:px-0">
         <p className="my-2 font-semibold">What kind of gas do you want?</p>
         <div className="flex w-full">
           {chainW && chainsW.length > 0 && (
@@ -410,7 +410,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
             <input
               type="text"
               name="sendNum"
-              className="h-12 outline-0"
+              className="w-24 h-12 outline-0"
               onChange={receiveAmnChange}
               value={receiverInfo.amount}
               onFocus={receiveAmnFocus}
@@ -446,7 +446,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           }}
         />
         <h4 className="text-xl font-bold text-center my-7">Payment methods</h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 lgi:grid-cols-2">
           {chainW && chainsW.length > 0 && (
             <SelectChain
               supportChains={chainsW}

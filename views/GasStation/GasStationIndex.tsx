@@ -36,10 +36,10 @@ const GasStationIndex = () => {
     <>
       <Header></Header>
       <div className={`banner lg:px-0`}>
-        <div className="container flex flex-col items-center mx-auto mt-16">
+        <div className="container flex flex-col items-center px-2 mx-auto mt-16">
           <h2 className="mt-12 text-5xl font-bold">Gas Station</h2>
-          <p className="mt-11 mb-7">Chain Supported</p>
-          <div className="flex w-4/6 mb-14 justify-evenly">
+          <p className="hidden lg:block mt-11 mb-7">Chain Supported</p>
+          <div className="hidden w-4/6 lg:flex mb-14 justify-evenly">
             {supportChains.length > 0 &&
               supportChains.map((chain: any) => (
                 <Image
@@ -51,9 +51,9 @@ const GasStationIndex = () => {
                 />
               ))}
           </div>
-          <div className="flex bg-gray-200 border rounded-full cursor-pointer select-none">
+          <div className="flex mt-5 bg-gray-200 border rounded-full cursor-pointer select-none lg:mt-0">
             <div
-              className={`px-16 py-3 font-medium ${
+              className={`lg:px-16 px-4 py-3 font-medium ${
                 sendType === 'main'
                   ? 'bg-blue-500 rounded-full text-white font-normal'
                   : ' rounded-full'
@@ -63,7 +63,7 @@ const GasStationIndex = () => {
               Main Net
             </div>
             <div
-              className={`px-16 py-3 font-medium ${
+              className={`lg:px-16 px-4 py-3 font-medium ${
                 sendType !== 'main'
                   ? 'bg-blue-500 rounded-full text-white font-normal'
                   : ' rounded-full'

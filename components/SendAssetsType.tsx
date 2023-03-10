@@ -186,13 +186,13 @@ export default function SendAssetsType() {
   return (
     <>
       {sendType === 'simple' && batchTokenData.operationType === 'manual' && (
-        <div className="flex items-center my-5 text-gray-500">
+        <div className="flex items-center my-5 text-sm text-gray-500 lg:text-lg">
           Send
-          <div className="flex items-center justify-between w-40 mx-5 input input-bordered">
+          <div className="flex items-center justify-between mx-5 w-25 lg:w-40 input input-bordered">
             <input
               type="text"
               placeholder="10"
-              className="w-20 outline-none"
+              className="w-10 outline-none lg:w-20"
               value={sendNumber}
               onChange={sendNumberChange}
               onFocus={setNumberNone}

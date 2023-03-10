@@ -8,11 +8,13 @@ export default function Step3() {
       <div>
         <div className="items-center py-5 mt-10 bg-white border border-gray-200 px-7 rounded-xl">
           <h4 className="text-xl font-bold">Transaction hash</h4>
-          <div className="mt-5 ">
+          <div className="w-full mt-5">
             {batchTokenData.txn.map((txn, index) => {
               return (
                 <div className="mt-2" key={index}>
-                  <span>{txn}</span>
+                  <span className="inline-block w-7/12 overflow-x-auto">
+                    {txn}
+                  </span>
                   <b className="float-right text-green-500 text-green">
                     SUCCESS
                   </b>

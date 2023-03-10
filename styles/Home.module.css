@@ -86,3 +86,9 @@
   background: url('/images/protogot2.webp') no-repeat;
   background-size: contain;
 }
+
+@media screen and (max-width: 720px) {
+  .description {
+    justify-content: flex-start;
+  }
+}

@@ -94,11 +94,12 @@ export default function BatchTokenSender() {
     <>
       <BatchTokenContext.Provider value={{ ...state, setBatchTokenData }}>
         <Header></Header>
-        <div className={`banner lg:px-0`}>
+        <div className={`banner lg:px-0 px-5`}>
           <div className="container flex flex-col items-center mx-auto mt-16">
             <h2 className="mt-12 text-5xl font-bold">Token batch sender</h2>
-            <p className="mt-11 mb-7">Chain Supported</p>
-            <div className="flex w-4/6 mb-14 justify-evenly">
+
+            <p className="hidden mt-11 mb-7 lg:block">Chain Supported</p>
+            <div className="hidden w-4/6 mb-14 justify-evenly lg:flex">
               {state.supportChains.map((chain) => (
                 <Image
                   src={`/images/support_chains/${chain.name}.png`}
@@ -109,27 +110,28 @@ export default function BatchTokenSender() {
                 />
               ))}
             </div>
-            <div className="w-[47rem]">
-              <div className="flex">
+
+            <div className="lg:w-[47rem] w-full lg:mt-0 mt-10">
+              <div className="flex justify-center">
                 <div
-                  className={`w-24 py-3 font-semibold text-center border border-gray-200 rounded-full ${
-                    state.step === 1 && 'bg-blue-700 text-white'
+                  className={`w-24 py-3 font-semibold text-center border border-gray-200 rounded-full lg:block ${
+                    state.step === 1 ? 'bg-blue-700 text-white block' : 'hidden'
                   }`}
                 >
                   1.Upload
                 </div>
-                <div className="divider grow"></div>
+                <div className="hidden lg:flex divider grow"></div>
                 <div
-                  className={`w-24 py-3 font-semibold text-center border border-gray-200 rounded-full ${
-                    state.step === 2 && 'bg-blue-700 text-white'
+                  className={`w-24 py-3 font-semibold text-center border border-gray-200 rounded-full lg:block ${
+                    state.step === 2 ? 'bg-blue-700 text-white block' : 'hidden'
                   }`}
                 >
                   2.Confirm
                 </div>
-                <div className="divider grow"></div>
+                <div className="hidden lg:flex divider grow"></div>
                 <div
-                  className={`py-3 font-semibold text-center border border-gray-200 rounded-full w-44 ${
-                    state.step === 3 && 'bg-blue-700 text-white'
+                  className={`py-3 font-semibold text-center border border-gray-200 rounded-full w-44 lg:block ${
+                    state.step === 3 ? 'bg-blue-700 text-white block' : 'hidden'
                   }`}
                 >
                   3.Batch Sending

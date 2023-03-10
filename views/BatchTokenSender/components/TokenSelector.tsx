@@ -226,17 +226,17 @@ export default function TokenSelector() {
     <>
       <div className="flex justify-between mt-10 text-gray-400">
         <b>Choose main net</b>
-        <b>Token contract address</b>
-        <b>
+        <b className="hidden lg:block">Token contract address</b>
+        <b className="hidden lg:block">
           <i className="not-italic text-black">Balance </i>
-          <span className="text-green-400">
+          <span className="text-green-400 ">
             {userBalance.count}
             <em className="not-italic"> {userBalance.unit}</em>
           </span>
         </b>
       </div>
       <div className={`grid grid-cols-3 mt-5 gap-7`}>
-        <div className={`w-ful ${style.chooseChain}`}>
+        <div className={`w-ful ${style.chooseChain} col-span-3 lg:col-span-1`}>
           {currentChain && currentChain.name && (
             <Select value={currentChain.name} onChange={chainChange}>
               {supportChains.map((chain) => {
@@ -258,7 +258,8 @@ export default function TokenSelector() {
             </Select>
           )}
         </div>
-        <div className={`col-span-2 ${style.chooseToken}`}>
+        <div className={`lg:col-span-2 ${style.chooseToken} col-span-3`}>
+          <b className="block mb-5 lg:hidden">Token contract address</b>
           <input
             type="text"
             placeholder="Type here"

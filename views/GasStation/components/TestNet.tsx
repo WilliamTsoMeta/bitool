@@ -37,7 +37,7 @@ export function TestNet({ gasStationContractInfo }: MainNetProps) {
 
   return (
     <>
-      <div className="container max-w-2xl mx-auto mt-10 mb-96">
+      <div className="container max-w-2xl px-5 mx-auto mt-10 mb-96 lg:px-0">
         {chainsW.map((chain, index) => {
           return (
             <div className="grid grid-cols-4 gap-4 mt-3" key={index}>

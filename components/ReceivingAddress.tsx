@@ -171,12 +171,13 @@ export default function ReceivingAddress() {
   return (
     <>
       <div className="flex items-center justify-between mt-8">
-        <p className="text-gray-400">
+        <p className="hidden text-gray-400 lg:block">
           List of receiving addresses(one address per line)
         </p>
+        <p className="text-sm text-gray-400 lg:hidden">Receiving addresses</p>
         <div className="flex border border-gray-300 rounded-full cursor-pointer select-none">
           <div
-            className={`px-4 py-1  ${
+            className={`px-4 py-1 text-xs lg:text-lg text-center lg:text-left ${
               batchTokenData.operationType === 'manual'
                 ? 'bg-black rounded-full text-white'
                 : ''
@@ -186,7 +187,7 @@ export default function ReceivingAddress() {
             Manual input
           </div>
           <div
-            className={`px-4 py-1  ${
+            className={`px-4 py-1 text-xs lg:text-lg text-center lg:text-left ${
               batchTokenData.operationType !== 'manual'
                 ? 'bg-black rounded-full text-white'
                 : ''

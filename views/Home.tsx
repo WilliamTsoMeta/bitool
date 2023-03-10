@@ -9,7 +9,7 @@ export default function Home() {
     <>
       <Header></Header>
 
-      <div className={`banner grid lg:grid-cols-2 px-5 lg:px-0`}>
+      <div className={`banner grid lg:grid-cols-2 px-5 lg:px-0 pt-28`}>
         <div className={`lg:mt-28 ${style.description}`}>
           <div className={style.desc}>
             <h2 className="mb-5 text-5xl font-bold">
@@ -35,7 +35,7 @@ export default function Home() {
         />
       </div>
 
-      <div>
+      <div className="mx-5 lg:mx-0">
         <h3 className="text-3xl font-bold text-center" id="popular">
           Popular
         </h3>
@@ -136,8 +136,7 @@ export default function Home() {
               </li>
             </ul>
             <Link
-              href="/"
-              // /gas_station
+              href="/gas_station"
               className={`bg-white text-red-500 rounded-full btn mb-10 ${style.btn}`}
             >
               View
@@ -150,53 +149,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* <div className="tool-bg" id="project_owner">
-        <h3 className="text-3xl font-bold text-center">
-          Tools for project owner
-        </h3>
-        <div className="container grid max-w-6xl gap-5 mx-auto mb-24 mt-14 lg:grid-cols-3">
-          <div
-            className={`rounded-3xl relative ${style['tool-card-project']} flex flex-col px-4 py-5`}
-          >
-            <img src="/images/protool1.webp" alt="project tools" width="48" />
-            <h4 className="mt-6 mb-4 text-xl font-bold">Token batch sender</h4>
-            <ul className="text-xs">
-              <li>· Air drop to community</li>
-              <li>· prepare gas for multiple wallets</li>
-            </ul>
-            <Link href={`#`} className="self-end mt-10">
-              <div className={style['round-arrow']}></div>
-            </Link>
-          </div>
-          <div
-            className={`rounded-3xl relative ${style['tool-card-project']} flex flex-col px-4 py-5`}
-          >
-            <img src="/images/protool2.webp" alt="project tools" width="48" />
-            <h4 className="mt-6 mb-4 text-xl font-bold">NFT batch sender</h4>
-            <ul className="text-xs">
-              <li>· Air drop to community</li>
-            </ul>
-            <Link href={`#`} className="self-end mt-10">
-              <div className={style['round-arrow']}></div>
-            </Link>
-          </div>
-          <div
-            className={`rounded-3xl relative ${style['tool-card-project']} flex flex-col px-4 py-5`}
-          >
-            <img src="/images/protool3.webp" alt="project tools" width="48" />
-            <h4 className="mt-6 mb-4 text-xl font-bold">Gas station</h4>
-            <ul className="text-xs">
-              <li>· Get gas of any blockchain in 1 click</li>
-              <li>· Get gas of any blockchain testnet</li>
-            </ul>
-            <Link href={`#`} className="self-end mt-10">
-              <div className={style['round-arrow']}></div>
-            </Link>
-          </div>
-        </div>
-      </div> */}
-
-      <div>
+      <div className="mx-5 lg:mx-0">
         <h3 className="text-3xl font-bold text-center">
           Tools for project owner
         </h3>
@@ -205,13 +158,13 @@ export default function Home() {
         </div>
       </div>
 
-      <div>
+      <div className="mx-5 lg:mx-0">
         <h3 className="text-3xl font-bold text-center">
           Request to develop new tools
         </h3>
-        <div className="container max-w-6xl mx-auto mb-24 text-center mt-14">
+        <div className="container max-w-full mx-auto mb-24 text-center lg:max-w-6xl mt-14">
           <a href="https://t.me/Yvoone_Bitool" target="_blank" rel="noreferrer">
-            <button className="p-2 text-white bg-black rounded-md w-96">
+            <button className="w-full p-2 text-white bg-black rounded-md lg:w-96">
               Contact us
             </button>
           </a>
