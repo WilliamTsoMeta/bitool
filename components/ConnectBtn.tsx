@@ -13,6 +13,9 @@ import { useRouter } from 'next/router'
 export default function ConnectBtn() {
   const router = useRouter()
   let defaultChainId = Number(process.env.NEXT_PUBLIC_DEFAULT_CHAIN)
+  let defaultChainIdGasStation = Number(
+    process.env.NEXT_PUBLIC_DEFAULT_CHAIN_GAS_STATION
+  )
   const { chains: chaissw, switchNetworkAsync } = useSwitchNetwork()
   // ANCHOR hooks
   const { address, connector: activeConnector, isConnected } = useAccount()
@@ -36,6 +39,10 @@ export default function ConnectBtn() {
     validateChain()
   }, [isConnected])
 
+  useEffect(() => {
+    validateChain()
+  }, [router])
+
   function validateChain() {
     try {
       console.log('router.pathname', router.pathname)
@@ -51,12 +58,32 @@ export default function ConnectBtn() {
 
         if (localChainId && localChainId !== '') {
           defaultChainId = Number(localChainId)
+        } else {
+          if (router.pathname.indexOf('gas_station') >= 0) {
+            defaultChainId = defaultChainIdGasStation
+          }
         }
 
-        if (chain?.id && defaultChainId !== chain?.id) {
-          switchNetworkAsync?.(defaultChainId).then(() => {
-            localStorage.setItem('defaultChainId', defaultChainId.toString())
-          })
+        if (chain?.id) {
+          console.log('validateChain invoke switch chain')
+          if (
+            router.pathname.indexOf('batch_token_sender') >= 0 &&
+            defaultChainId !== chain?.id
+          ) {
+            switchNetworkAsync?.(defaultChainId).then(() => {
+              localStorage.setItem('defaultChainId', defaultChainId.toString())
+            })
+          } else if (
+            router.pathname.indexOf('gas_station') >= 0 &&
+            defaultChainIdGasStation !== chain?.id
+          ) {
+            switchNetworkAsync?.(defaultChainId).then(() => {
+              localStorage.setItem(
+                'defaultChainId_gas_station',
+                defaultChainId.toString()
+              )
+            })
+          }
         }
         clearTimeout(timer)
       }, 2000)

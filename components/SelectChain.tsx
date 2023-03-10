@@ -63,10 +63,11 @@ export default function SelectChain(props: Props) {
       const exist = props.supportChains.filter((value) => {
         return props.defaultChain.id === value.id
       })
+      console.log('exist', exist, props.defaultChain.id)
       exist.length === 0 ? setnotSupport(true) : setnotSupport(false)
     }
     setcurrentChain(props.defaultChain)
-  }, [props.defaultChain, props.supportChains])
+  }, [props.defaultChain, props.supportChains, chain, chain?.id])
 
   async function chainChange(value: string) {
     try {

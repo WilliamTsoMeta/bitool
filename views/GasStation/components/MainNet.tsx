@@ -93,18 +93,29 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     }
 
     if (chain) {
-      if (!receiverInfo.chain.id) {
-        setreceiverInfo({ ...receiverInfo, chain })
+      console.log('receiverInfo.chain.id', receiverInfo.chain.id)
+
+      if (chainsW) {
+        //check if current chain is support chain
+        const exist = chainsW.filter((value) => {
+          return chain.id === value.id
+        })
+        if (exist.length > 0) {
+          if (tokenSymbol === '') {
+            settokenSymbol(chain?.nativeCurrency?.symbol)
+          }
+          if (!receiverInfo.chain.id) {
+            setreceiverInfo({ ...receiverInfo, chain })
+          }
+        }
       }
-      if (tokenSymbol === '') {
-        settokenSymbol(chain?.nativeCurrency?.symbol)
-      }
-      if (Object.keys(chainW).length === 0) {
+
+      if (Object.keys(chainW).length === 0 || chain.id !== chainW.id) {
         setchainW(chain)
       }
       setpayChain(chain)
     }
-  }, [chain, chains, receiverInfo])
+  }, [chain, chain?.id, chains, receiverInfo])
 
   useEffect(() => {
     // only runs under tentnet for development enviroment
@@ -174,8 +185,8 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
   }, [gasStationContractInfo, signer, payChain.id, receiverInfo.chain.id])
 
   const receivingChainChange = (chain: Chain) => {
+    console.log('receiving chain', chain, chain?.nativeCurrency?.symbol)
     settokenSymbol(chain?.nativeCurrency?.symbol)
-    console.log('chain', chain)
     setreceiverInfo({ ...receiverInfo, amount: '', chain })
     setgetTokenCount('0')
   }
@@ -203,23 +214,15 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       ]
     )
 
-    // if (receiverInfo.address) {
     const gasFee = await fetchFeeData({
       chainId: receiverInfo.chain.id,
     })
 
     let gasPrice = BigNumber.from(gasFee?.gasPrice)
-    // let estmationB = BigNumber.from(estimation)
-    console.log('gasPrice', Number(gasPrice), 250000)
+
     let estmationB = BigNumber.from(250000)
     let gasEstimationNum = gasPrice.mul(estmationB)
     setgasEstimation(formatUnits(gasEstimationNum, wtokenDecimals))
-    // }
-    console.log(
-      'gasEstimationNum',
-      Number(gasEstimationNum),
-      Number(nativeCurrencyAmn[1])
-    )
 
     return formatUnits(
       nativeCurrencyAmn[1].sub(gasEstimationNum),
