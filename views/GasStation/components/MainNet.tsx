@@ -374,7 +374,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
             payload: {
               type: 'alert-error',
               message:
-                'Failed to get gas.please cotact us and provide your trasaction hash',
+                'Failed to get gas.please contact us and provide your transaction hash',
               show: true,
             },
           })
