@@ -400,10 +400,10 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           ?.connect(signer)
           .approve(
             gasStationContractInfo[payChain.id].contractAddress,
-            parseUnits('9', payChain.nativeCurrency.decimals)
+            parseUnits('10', payChain.nativeCurrency.decimals)
           )
         ap.wait()
-        setallowance(9)
+        setallowance(10)
       }
     } catch (error) {
       console.log('approve error', error)
