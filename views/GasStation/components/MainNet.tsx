@@ -29,6 +29,7 @@ import {
 import Context from 'context/Context'
 import { getProvider } from '@wagmi/core'
 import { fetchFeeData } from '@wagmi/core'
+import axios from 'axios'
 
 export interface MainNetProps {
   gasStationContractInfo: contractInfosType
@@ -41,6 +42,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     isConnected,
   } = useAccount()
   const { chain, chains } = useNetwork()
+  const baseurl = process.env.NEXT_PUBLIC_BASE_API
   // const { data: gasFee, isError, isLoading } = useFeeData()
   // const { connect, connectors, error, isLoading, pendingConnector } =
   //   useConnect({ connector: new InjectedConnector() })
@@ -292,7 +294,7 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
 
   const swap = async () => {
     let toWei = 1e18
-    switch (receiverInfo.chain.nativeCurrency.decimals) {
+    switch (gasStationContractInfo[payChain.id].staableCoin?.decimals) {
       case 6:
         toWei = 1e6
         break
@@ -368,6 +370,16 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
           clearInterval(timer)
         }
         tries += 1
+        if (tries === 30) {
+          const sentGas = await axios.post(
+            `${baseurl}/public/get_params_with_trxhash`,
+            {
+              hash: txn.hash,
+              fromChain: payChain.id,
+            }
+          )
+        }
+
         if (tries > 100) {
           setContext({
             type: 'SET_ALERT',

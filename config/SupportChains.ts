@@ -5,12 +5,12 @@ export function getGasStationContractInfo(): contractInfosType {
   if (env === 'development' || env === 'staging') {
     return {
       43113: {
-        contractAddress: '0x40BB809f56D3784bbd7172B341886977efC7f5e9', //faucet
+        contractAddress: '0xE355179f48497a7b348cD24f9D11f67050E3576d', //faucet
         swaprouterContract: '0xEE4805B268bb164995B7c8b3f49BCFf272163662', //fake
         staableCoin: {
           name: 'USDT',
-          address: '0x5E66F8908c473a1eCF2d6C02f07cA4A7bC450c63',
-          decimals: 18,
+          address: '0xfDD6Db3Afd662aFDD5ad35C15fE47B81B8b11532',
+          decimals: 6,
         },
         WToken: {
           name: 'WAVAX',
