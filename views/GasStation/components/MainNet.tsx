@@ -335,7 +335,14 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     }
 
     setpaying(true)
-
+    setContext({
+      type: 'SET_ALERT',
+      payload: {
+        type: 'alert-warning',
+        message: 'Please wait at least 1 minutes!',
+        show: true,
+      },
+    })
     try {
       console.log(
         amount.toString(),
@@ -343,6 +350,12 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
         receiverInfo.address
       )
       let txn: any
+      console.log(
+        'amount.toString()receiverInfo.chain.idreceiverInfo.address',
+        amount.toString(),
+        receiverInfo.chain.id,
+        receiverInfo.address
+      )
       txn = await gasStationContract.deposit(
         amount.toString(),
         receiverInfo.chain.id,
