@@ -303,6 +303,30 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
     let amount = orgAmn * toWei
     let message
     let err = false
+
+    const receiverChainContract =
+      gasStationContractInfo[receiverInfo.chain.id].contractAddress
+    const stableTokenAddr =
+      gasStationContractInfo[receiverInfo.chain.id].staableCoin.address
+    const balance = await fetchBalance({
+      address: receiverChainContract,
+      chainId: receiverInfo.chain.id,
+      token: stableTokenAddr as any,
+    })
+    console.log(
+      'balance.formatted',
+      balance.formatted,
+      receiverChainContract,
+      stableTokenAddr,
+      receiverInfo.chain.id,
+      'orgAmn',
+      orgAmn
+    )
+    if (Number(balance.formatted) < orgAmn) {
+      message = 'contract balance not enough！Please contact us.'
+      err = true
+    }
+
     if (receiverInfo.chain.id === 1 || receiverInfo.chain.id === 97) {
       if (orgAmn < 5 || orgAmn > 10) {
         message = 'Please check your form, Amount should be $5-$10'
@@ -320,7 +344,6 @@ export function MainNet({ gasStationContractInfo }: MainNetProps) {
       err = true
     }
 
-    // receiverInfo.chain.id &&
     if (err) {
       setContext({
         type: 'SET_ALERT',
