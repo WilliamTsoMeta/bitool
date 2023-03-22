@@ -16,6 +16,9 @@ export default function ConnectBtn() {
   let defaultChainIdGasStation = Number(
     process.env.NEXT_PUBLIC_DEFAULT_CHAIN_GAS_STATION
   )
+  let defaultChainIdBatchClaimer = Number(
+    process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER
+  )
   const { chains: chaissw, switchNetworkAsync } = useSwitchNetwork()
   // ANCHOR hooks
   const { address, connector: activeConnector, isConnected } = useAccount()
@@ -54,6 +57,10 @@ export default function ConnectBtn() {
           localChainId = window.localStorage.getItem(
             'defaultChainId_gas_station'
           )
+        } else if (router.pathname.indexOf('batch_claimer') >= 0) {
+          localChainId = window.localStorage.getItem(
+            'defaultChainId_batch_claimer'
+          )
         }
 
         if (localChainId && localChainId !== '') {
@@ -61,6 +68,9 @@ export default function ConnectBtn() {
         } else {
           if (router.pathname.indexOf('gas_station') >= 0) {
             defaultChainId = defaultChainIdGasStation
+          }
+          if (router.pathname.indexOf('batch_claimer') >= 0) {
+            defaultChainId = defaultChainIdBatchClaimer
           }
         }
 
@@ -80,6 +90,13 @@ export default function ConnectBtn() {
             switchNetworkAsync?.(defaultChainId).then(() => {
               localStorage.setItem(
                 'defaultChainId_gas_station',
+                defaultChainId.toString()
+              )
+            })
+          } else if (router.pathname.indexOf('batch_claimer') >= 0) {
+            switchNetworkAsync?.(defaultChainId).then(() => {
+              localStorage.setItem(
+                'defaultChainId_batch_claimer',
                 defaultChainId.toString()
               )
             })

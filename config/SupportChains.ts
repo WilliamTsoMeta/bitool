@@ -293,3 +293,36 @@ export function getBatchTokenContractInfo(): batchTokenContractInfoType[] {
     // },
   ]
 }
+
+export function getBatchTokenClaimSuporrt(): batchTokenContractInfoType[] {
+  if (env === 'development' || env === 'staging') {
+    return [
+      {
+        id: 43113,
+        name: 'Avalanch',
+        token: 'AVAX',
+        contractAddress: '',
+        tokenOptions: [
+          {
+            label: 'AVAX',
+            value: 'AVAX',
+          },
+        ],
+      },
+    ]
+  }
+  return [
+    {
+      id: 42161,
+      name: 'Arbitrum',
+      token: 'ETH',
+      contractAddress: '',
+      tokenOptions: [
+        {
+          label: 'ETH',
+          value: 'ETH',
+        },
+      ],
+    },
+  ]
+}

@@ -79,7 +79,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div
+          {/* <div
             className={`rounded-3xl relative ${style['tool-card']} flex flex-col items-center pt-9`}
           >
             <img
@@ -109,6 +109,47 @@ export default function Home() {
                 src="/images/card-arrow-yellow.webp"
               ></img>
             </div>
+          </div> */}
+
+          <div
+            className={`rounded-3xl relative ${style['tool-card']} flex flex-col items-center pt-9`}
+          >
+            <img
+              src="/images/free.webp"
+              alt="free"
+              className="absolute top-0 right-0"
+              width={80}
+            />
+            <div className={`${style['tool-card-icon']} bg-amber-500`}>
+              <img src="/images/nftsender.webp" alt="batch sender" />
+            </div>
+
+            <h4 className="my-6 text-2xl font-bold text-center">
+              Arbitrum Airdrop batch Claim
+            </h4>
+            <hr className="mb-6" />
+            <ul className="h-20 mb-10">
+              <li>
+                {' '}
+                <i className="bg-violet-600"></i> Batch claim $ARB Airdrop
+              </li>
+              <li>
+                {' '}
+                <i className="bg-violet-600"></i> Batch collect $ARB to one
+                address
+              </li>
+            </ul>
+            <Link
+              // href="/"
+              href="/batch_claimer"
+              className={`bg-white rounded-full btn mb-10 text-amber-500 ${style.btn}`}
+            >
+              View
+              <img
+                className={style['card-arrow']}
+                src="/images/card-arrow-yellow.webp"
+              ></img>
+            </Link>
           </div>
 
           <div
