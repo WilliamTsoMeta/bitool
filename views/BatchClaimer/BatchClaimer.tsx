@@ -113,7 +113,7 @@ export default function BatchTokenSender() {
 
   function setExample() {
     setaddress(
-      '0x4a668082078fe2bda4b607eb4782bdbc3b23df61a602d777c12a66936a6f78be\n0xab1c5cb15d8760a40f32c21fa61548b9b76ee1c4c39d1a0c86874c3b99c1d4f1'
+      '0xb32c4a33879ef8e235d928ee397af7b7cacc982db144ee2c7c0f403aa4f8b89e\n0xb8a9d5cd32c65dc2e4c28527f5b91ce1abda1151447d1c73c2ebea57b12b9f6c'
     )
   }
 
@@ -480,7 +480,7 @@ export default function BatchTokenSender() {
               <>
                 <div className="flex items-center justify-between mt-8">
                   <p className="hidden text-gray-400 lg:block">
-                    List of pprivate keys(one key per line)
+                    List of private keys(one key per line)
                   </p>
                 </div>
                 <div className="w-full p-1 mt-3 outline-none h-58 textarea textarea-bordered">
