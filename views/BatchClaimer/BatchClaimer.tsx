@@ -25,6 +25,7 @@ import { ethers, Wallet, BigNumber } from 'ethers'
 import { fetchBalance } from '@wagmi/core'
 import { randomBytes } from 'crypto'
 import { erc20ABI, getContract } from '@wagmi/core'
+import Countdown from 'react-countdown'
 
 export default function BatchTokenSender() {
   const supportChains = getBatchTokenClaimSuporrt()
@@ -57,6 +58,8 @@ export default function BatchTokenSender() {
     React.Key[]
   >([])
   const tokenAddr = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER_TOKEN
+  const claimStartTime =
+    process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER_START
   interface DataType {
     key: React.Key
     walletAddress: string
@@ -112,83 +115,6 @@ export default function BatchTokenSender() {
     setaddress(
       '0x4a668082078fe2bda4b607eb4782bdbc3b23df61a602d777c12a66936a6f78be\n0xab1c5cb15d8760a40f32c21fa61548b9b76ee1c4c39d1a0c86874c3b99c1d4f1'
     )
-  }
-
-  function expandTo18Decimals(value: any) {
-    var decimalPlaces = 18
-    var amount = ethers.utils.parseUnits(
-      BigNumber.from(value).toString(),
-      decimalPlaces
-    )
-    return amount
-  }
-
-  function randomSecret() {
-    return '0x' + randomBytes(32).toString('hex')
-  }
-
-  /*   async function makeMoney() {
-    let tx
-    let keys1111111 = []
-    // 先拿到privatekey
-    for (let i = 0; i < 10; i++) {
-      var privateKey = randomSecret()
-      console.log('', privateKey)
-      keys1111111.push(privateKey)
-    }
-    // 做一些准备 跟前端没关系
-    // 项目方需要提前把用户数据保存 项目方操作开始
-    let addresses = []
-    let signers = []
-    let values = []
-    for (let i = 0; i < 10; i++) {
-      let privateKey = keys1111111[i]
-      var wallet = new ethers.Wallet(privateKey)
-      signers.push(wallet)
-      addresses.push(wallet.address)
-      const random = Math.random() * 2000 + 1
-      values.push(expandTo18Decimals(Math.round(random)))
-    }
-    console.log(values)
-
-    const url = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER_URL
-    const customHttpProvider = new ethers.providers.JsonRpcProvider(url)
-
-    let walletOwner = new Wallet(
-      '0xab1c5cb15d8760a40f32c21fa61548b9b76ee1c4c39d1a0c86874c3b99c1d4f1',
-      customHttpProvider
-    )
-    const walletSigner = walletOwner.connect(walletOwner.provider)
-    const disbutor = new ethers.Contract(
-      process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER_CONTRACT ?? '',
-      arbTokenClaimABI,
-      walletSigner
-    )
-    tx = await disbutor.setRecipients(addresses, values)
-    await tx.wait()
-    // // 项目方操作结束
-
-    // 用户需要给每个账户打点gas费 用户操作开始
-    for (let i = 0; i < 10; i++) {
-      let trx = await user.sendTransaction({
-        to: addresses[i],
-        value: ethers.utils.parseEther('0.01'),
-      })
-      trx = await trx.wait()
-    }
-    console.log('打钱结束！')
-  } */
-
-  function removeErr() {
-    let correctArr: any = []
-    let errIndexes = addrErr.errs.map((item) => item.row - 1)
-
-    correctArr = splitArr.filter((item: any, index: number) => {
-      return !errIndexes.includes(index)
-    })
-    console.log('function:removeErr:correctArr', correctArr)
-    setsplitArr(correctArr)
-    setaddress(correctArr.join('\n'))
   }
 
   function createWallet(privateKey: string) {
@@ -465,12 +391,51 @@ export default function BatchTokenSender() {
     // todo validate token address
   }
 
+  function backStep2() {
+    setstep(2)
+    nextStep()
+  }
+
+  // Renderer callback with condition
+  const rendererCountDown = ({
+    days,
+    hours,
+    minutes,
+    seconds,
+    completed,
+  }: any) => {
+    if (completed) {
+      // Render a completed state
+      return (
+        <button
+          className={`w-full mt-5 bg-black btn rounded-xl ${
+            loading && 'loading'
+          }`}
+          onClick={claim}
+        >
+          Claim
+        </button>
+      )
+    } else {
+      // Render a countdown
+      return (
+        <button
+          className={`w-full mt-5 bg-black btn rounded-xl ${
+            loading && 'loading'
+          }`}
+        >
+          Claiming will be live in : {days} days {hours}:{minutes}:{seconds}
+        </button>
+      )
+    }
+  }
+
   return (
     <>
       <Header></Header>
       <div className={`banner lg:px-0 px-5`}>
         <div className="container flex flex-col items-center mx-auto mt-16">
-          <h2 className="mt-12 text-5xl font-bold">Token batch sender</h2>
+          <h2 className="mt-12 text-5xl font-bold">$ARB batch claimer</h2>
 
           <p className="hidden mt-11 mb-7 lg:block">Chain Supported</p>
           <div className="hidden w-4/6 mb-14 justify-evenly lg:flex">
@@ -492,7 +457,7 @@ export default function BatchTokenSender() {
                   step === 1 ? 'bg-blue-700 text-white block' : 'hidden'
                 }`}
               >
-                1.Impoort private keys
+                1.Import private keys
               </div>
               <div className="hidden lg:flex divider grow"></div>
               <div
@@ -556,14 +521,10 @@ export default function BatchTokenSender() {
                   />
                 </div>
                 {walletConect && (
-                  <button
-                    className={`w-full mt-5 bg-black btn rounded-xl ${
-                      loading && 'loading'
-                    }`}
-                    onClick={claim}
-                  >
-                    Claim
-                  </button>
+                  <Countdown
+                    date={claimStartTime}
+                    renderer={rendererCountDown}
+                  />
                 )}
               </>
             )}
@@ -590,6 +551,12 @@ export default function BatchTokenSender() {
                     />
                   </div>
                 </div>
+                <button
+                  className={`w-full mt-5 bg-gray-500 btn rounded-xl`}
+                  onClick={backStep2}
+                >
+                  Back
+                </button>
                 {walletConect && (
                   <button
                     className={`w-full mt-5 bg-black btn rounded-xl ${
