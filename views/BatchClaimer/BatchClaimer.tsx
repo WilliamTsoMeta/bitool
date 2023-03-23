@@ -5,7 +5,7 @@ import Image from 'next/image'
 // import Step2 from './components/Step2'
 // import Step3 from './components/Step3'
 import { getBatchTokenClaimSuporrt } from 'config/SupportChains'
-import { useEffect, useState, useCallback, useContext } from 'react'
+import { useEffect, useState, useCallback, useContext, useRef } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
 import {
@@ -49,7 +49,7 @@ export default function BatchTokenSender() {
   const { address: accountAddr, isConnected } = useAccount()
   const [privateKeys, setprivateKeys] = useState([] as DataType[])
   const [selectedRows, setSelectedRows] = useState([] as DataType[])
-  const [collectionAddr, setcollectionAddr] = useState(accountAddr ?? '')
+  const [collectionAddr, setcollectionAddr] = useState('')
   const [selectedRowsCollect, setSelectedRowsCollect] = useState(
     [] as DataType[]
   )
@@ -57,9 +57,14 @@ export default function BatchTokenSender() {
   const [selectedRowKeysCollect, setSelectedRowKeysCollect] = useState<
     React.Key[]
   >([])
+  const [countStoped, setCountStoped] = useState(false)
   const tokenAddr = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER_TOKEN
   const claimStartTime =
     process.env.NEXT_PUBLIC_DEFAULT_CHAIN_BATCH_CLAIMER_START
+  const [runningTask, setrunningTask] = useState(false)
+  const [timer, settimer] = useState()
+  const [excuted, setexcuted] = useState(false)
+  const countDownRef = useRef(null)
   interface DataType {
     key: React.Key
     walletAddress: string
@@ -70,6 +75,7 @@ export default function BatchTokenSender() {
     contract: any
     contractProv: any
     tokenContract: any
+    result?: string
   }
 
   const columns: ColumnsType<DataType> = [
@@ -99,6 +105,10 @@ export default function BatchTokenSender() {
     {
       title: 'Balance ($ARB)',
       dataIndex: 'balance',
+    },
+    {
+      title: 'Claiming Result',
+      dataIndex: 'result',
     },
   ]
 
@@ -137,11 +147,11 @@ export default function BatchTokenSender() {
       walletSigner
     )
 
-    const tokenContract = getContract({
-      address: tokenAddr ?? '',
-      abi: erc20ABI,
-      signerOrProvider: walletSigner,
-    })
+    const tokenContract = new ethers.Contract(
+      tokenAddr ?? '',
+      erc20ABI,
+      walletSigner
+    )
 
     return { wallet, contract, contractProv, tokenContract }
   }
@@ -176,6 +186,11 @@ export default function BatchTokenSender() {
           address: walletPrivateKey.address as any,
           token: tokenAddr ?? ('' as any),
         })
+
+        const Pbalance = await fetchBalance({
+          address: walletPrivateKey.address as any,
+        })
+        console.log('Pbalance', Pbalance)
 
         // claimableRewards 可领取的数量
         const claimableAmount = await contractProv.claimableTokens(
@@ -249,6 +264,9 @@ export default function BatchTokenSender() {
   const rowSelection: TableRowSelection<DataType> = {
     selectedRowKeys,
     onChange: onSelectChange,
+    getCheckboxProps: (record: DataType) => ({
+      disabled: Number(record?.cTokens) <= 0,
+    }),
   }
 
   const rowSelectionCollect: TableRowSelection<DataType> = {
@@ -258,6 +276,170 @@ export default function BatchTokenSender() {
 
   async function claim() {
     setloading(true)
+
+    const claimList = await Promise.all(
+      selectedRows.map(async (row, i) => {
+        try {
+          if (row.cTokens > 0) {
+            const dis = row.contract
+            let tx = await dis.claim()
+            tx = await tx.wait()
+            return row
+          }
+          return row
+        } catch (error) {
+          console.error(error)
+          return row
+        }
+      })
+    )
+    console.log('claimList', claimList)
+
+    const newAddr = await Promise.all(
+      claimList.map(async (row, i) => {
+        try {
+          // claimableRewards
+          const claimableAmount: any = await row.contractProv.claimableTokens(
+            row.wallet.address
+          )
+          const balance: any = await fetchBalance({
+            address: row.wallet.address as any,
+            token: tokenAddr ?? ('' as any),
+          })
+          return {
+            ...row,
+            cTokens: Number(claimableAmount) / 1e18,
+            balance: balance.formatted,
+            balanceOrg: balance.value,
+            result: 'claimed',
+          }
+        } catch (error) {
+          setloading(false)
+          console.log('error', error)
+          return {
+            ...row,
+            result: 'claim failed',
+          }
+        }
+      })
+    )
+    setCollectAddress(newAddr)
+    setloading(false)
+    setstep(3)
+    return newAddr
+  }
+
+  async function collect(newAddr?: DataType[]) {
+    setloading(true)
+    /* if (selectedRowsCollect.length <= 0 || collectionAddr === '') {
+      setContext({
+        type: 'SET_ALERT',
+        payload: {
+          type: 'alert-error',
+          message: 'Please fullfiled form',
+          show: true,
+        },
+      })
+      setloading(false)
+      return
+    } */
+
+    const targetAddr = newAddr ?? selectedRowsCollect
+    console.log('collectAddress', targetAddr)
+    const resultList = await Promise.all(
+      // selectedRowsCollect.map(async (row, i) => {
+      targetAddr.map(async (row, i) => {
+        console.log('row.balance', row.balance)
+        try {
+          if (Number(row.balance) > 0) {
+            const token: any = row.tokenContract
+            // console.log('token----', targetAddress, Number(row.balance) * 1e18)
+            let tx = await token.transfer(collectionAddr, row.balanceOrg)
+            tx = await tx.wait()
+            return { ...row, result: 'success' }
+          }
+          setloading(false)
+          return row
+        } catch (error) {
+          setloading(false)
+          console.error(error)
+          return { ...row, result: 'failed' }
+        }
+      })
+    )
+
+    console.log('row', resultList)
+    try {
+      const collRes = await Promise.all(
+        // selectedRowsCollect
+        resultList.map(async (row, i) => {
+          // claimableRewards
+          const claimableAmount: any = await row.contractProv.claimableTokens(
+            row.wallet.address
+          )
+          const balance: any = await fetchBalance({
+            address: row.wallet.address as any,
+            token: tokenAddr ?? ('' as any),
+          })
+          return {
+            ...row,
+            cTokens: Number(claimableAmount) / 1e18,
+            balance: balance.formatted,
+          }
+        })
+      )
+      setCollectAddress(collRes)
+      /* setContext({
+        type: 'SET_ALERT',
+        payload: {
+          type: 'alert-success',
+          message: 'Collection excuted',
+          show: true,
+        },
+      }) */
+      setloading(false)
+    } catch (error) {}
+  }
+
+  async function changeCollectionAddr(e: React.ChangeEvent<HTMLInputElement>) {
+    setcollectionAddr(e.target.value)
+    // todo validate token address
+  }
+
+  async function backStep2() {
+    setstep(2)
+    await nextStep()
+  }
+
+  async function restartTask() {
+    clearInterval(timer)
+    // setexcuted(false)
+    await backStep2()
+    await claimAndCollect()
+  }
+
+  // Renderer callback with condition
+  const rendererCountDown = ({
+    days,
+    hours,
+    minutes,
+    seconds,
+    completed,
+  }: any) => {
+    // Render a countdown
+    return (
+      <div className="mt-5 text-center">
+        <b className="flex text-red-500">
+          The task will submit automatically when claiming is live. Please keep
+          the page running in the foreground.{' '}
+        </b>
+        The claiming will be live in {days} days {hours}:{minutes}:{seconds}
+        <p className="underline">（L1 block 16890400）.</p>
+      </div>
+    )
+  }
+
+  async function claimAndCollect() {
     if (selectedRows.length <= 0) {
       setloading(false)
       setContext({
@@ -270,164 +452,41 @@ export default function BatchTokenSender() {
       })
       return
     }
-    try {
-      const claimList = await Promise.all(
-        selectedRows.map(async (row, i) => {
-          try {
-            if (row.cTokens > 0) {
-              const dis = row.contract
-              // 查看结束
-              let tx = await dis.claim()
-              tx = await tx.wait()
-              return row
-            }
-            return row
-          } catch (error) {
-            console.error(error)
-            return row
-          }
-        })
-      )
-      console.log('claimList', claimList)
 
-      const newAddr = await Promise.all(
-        claimList.map(async (row, i) => {
-          // claimableRewards 可领取的数量
-          const claimableAmount: any = await row.contractProv.claimableTokens(
-            row.wallet.address
-          )
-          const balance = await fetchBalance({
-            address: row.wallet.address as any,
-            token: tokenAddr ?? ('' as any),
-          })
-          return {
-            ...row,
-            cTokens: Number(claimableAmount),
-            balance: balance.formatted,
-            balanceOrg: balance.value,
-          }
-        })
+    const timerIn = setInterval(async () => {
+      console.log(
+        'countDownRef?.current',
+        // @ts-ignore
+        countDownRef?.current?.api.isCompleted()
       )
-      setCollectAddress(newAddr)
-      console.log('setCollectAddress', newAddr)
-      setloading(false)
-    } catch (error) {
-      setloading(false)
-      console.log('error', error)
-    }
-    setstep(3)
+      // @ts-ignore
+      const countStoped = countDownRef?.current?.api.isCompleted()
+      if (countStoped) {
+        clearInterval(timerIn)
+        setrunningTask(false)
+        // setexcuted(true)
+        const newAddr = await claim()
+        await collect(newAddr)
+        return
+      }
+      setrunningTask(true)
+    }, 1000)
+
+    settimer(timerIn as any)
   }
 
-  async function collect() {
-    setloading(true)
-    if (selectedRowsCollect.length <= 0 || collectionAddr === '') {
-      setContext({
-        type: 'SET_ALERT',
-        payload: {
-          type: 'alert-error',
-          message: 'Please fullfiled form',
-          show: true,
-        },
-      })
-      setloading(false)
-      return
-    }
-
-    const targetAddress = collectAddress
-    const resultList = await Promise.all(
-      selectedRowsCollect.map(async (row, i) => {
-        console.log('row.balance', row.balance)
-        try {
-          if (Number(row.balance) > 0) {
-            const token = row.tokenContract
-            console.log('token----', targetAddress, Number(row.balance) * 1e18)
-            let tx = await token.transfer(collectionAddr, row.balanceOrg)
-            tx = await tx.wait()
-            return tx['transactionHash']
-          }
-          return 0
-        } catch (error) {
-          setloading(false)
-          console.error(error)
-          return 0
-        }
-      })
-    )
-
-    console.log('row', resultList)
-    try {
-      const collRes = await Promise.all(
-        selectedRowsCollect.map(async (row, i) => {
-          // claimableRewards 可领取的数量
-          const claimableAmount: any = await row.contractProv.claimableTokens(
-            row.wallet.address
-          )
-          const balance = await fetchBalance({
-            address: row.wallet.address as any,
-            token: tokenAddr ?? ('' as any),
-          })
-          return {
-            ...row,
-            cTokens: Number(claimableAmount),
-            balance: balance.formatted,
-          }
-        })
-      )
-      setCollectAddress(collRes)
-      setContext({
-        type: 'SET_ALERT',
-        payload: {
-          type: 'alert-success',
-          message: 'Collection excuted',
-          show: true,
-        },
-      })
-      setloading(false)
-    } catch (error) {}
+  async function backStep1() {
+    setstep(1)
   }
 
-  async function changeCollectionAddr(e: React.ChangeEvent<HTMLInputElement>) {
-    setcollectionAddr(e.target.value)
-    // todo validate token address
+  function timerMounted(timerStat: any) {
+    console.log('timerStat', timerStat)
+    setCountStoped(timerStat.completed)
   }
 
-  function backStep2() {
-    setstep(2)
-    nextStep()
-  }
-
-  // Renderer callback with condition
-  const rendererCountDown = ({
-    days,
-    hours,
-    minutes,
-    seconds,
-    completed,
-  }: any) => {
-    if (completed) {
-      // Render a completed state
-      return (
-        <button
-          className={`w-full mt-5 bg-black btn rounded-xl ${
-            loading && 'loading'
-          }`}
-          onClick={claim}
-        >
-          Claim
-        </button>
-      )
-    } else {
-      // Render a countdown
-      return (
-        <button
-          className={`w-full mt-5 bg-black btn rounded-xl ${
-            loading && 'loading'
-          }`}
-        >
-          Claiming will be live in : {days} days {hours}:{minutes}:{seconds}
-        </button>
-      )
-    }
+  function onStopedCount() {
+    console.log('cnm')
+    setCountStoped(true)
   }
 
   return (
@@ -497,16 +556,19 @@ export default function BatchTokenSender() {
                 >
                   Example
                 </p>
-                {walletConect && (
-                  <button
-                    className={`w-full mt-5 bg-black btn rounded-xl ${
-                      loading && 'loading'
-                    }`}
-                    onClick={nextStep}
-                  >
-                    Next Step
-                  </button>
-                )}
+
+                <button
+                  className={`w-full mt-5 bg-black btn rounded-xl ${
+                    loading && 'loading'
+                  }`}
+                  onClick={nextStep}
+                >
+                  Next Step
+                </button>
+                <p className="text-red-500">
+                  Security reminder: Please run in a safe enviroment. The
+                  private key is only stored in the browser cache.
+                </p>
               </>
             )}
 
@@ -518,25 +580,7 @@ export default function BatchTokenSender() {
                     columns={columns}
                     dataSource={privateKeys}
                     key={2}
-                  />
-                </div>
-                {walletConect && (
-                  <Countdown
-                    date={claimStartTime}
-                    renderer={rendererCountDown}
-                  />
-                )}
-              </>
-            )}
-
-            {step === 3 && (
-              <>
-                <div className="mt-5">
-                  <Table
-                    rowSelection={rowSelectionCollect}
-                    columns={columns2}
-                    dataSource={collectAddress}
-                    key={3}
+                    pagination={false}
                   />
                   <div className={`lg:col-span-2 col-span-3 mt-10`}>
                     <b className="block mb-5">
@@ -553,27 +597,94 @@ export default function BatchTokenSender() {
                 </div>
                 <button
                   className={`w-full mt-5 bg-gray-500 btn rounded-xl`}
+                  onClick={backStep1}
+                >
+                  Back
+                </button>
+                {/* <button
+                    className={`w-full mt-5 bg-black btn rounded-xl ${
+                      loading && 'loading'
+                    }`}
+                    onClick={claim}
+                  >
+                    Claim
+                  </button> */}
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div className="mt-5">
+                  <Table
+                    rowSelection={rowSelectionCollect}
+                    columns={columns2}
+                    dataSource={collectAddress}
+                    key={3}
+                  />
+                  <div className={`lg:col-span-2 col-span-3 mt-10`}>
+                    <b className="block mb-5">
+                      Send all $ARB to this address after claim:
+                    </b>
+                    <input
+                      type="text"
+                      placeholder="Receive address(or CEX Deposit address)"
+                      className="w-full bg-gray-200 input"
+                      value={collectionAddr}
+                      onChange={changeCollectionAddr}
+                    />
+                  </div>
+                </div>
+                <button
+                  className={`w-full mt-5 bg-gray-500 btn rounded-xl`}
                   onClick={backStep2}
                 >
                   Back
                 </button>
-                {walletConect && (
-                  <button
+
+                {/* <button
                     className={`w-full mt-5 bg-black btn rounded-xl ${
                       loading && 'loading'
                     }`}
                     onClick={collect}
                   >
                     Collect
-                  </button>
-                )}
+                  </button> */}
               </>
             )}
+
+            {(step === 2 || step === 3) && !runningTask && (
+              <button
+                className={`w-full mt-5 bg-black btn rounded-xl ${
+                  loading && 'loading'
+                }`}
+                onClick={claimAndCollect}
+              >
+                Claim and Collect $ARB Task
+              </button>
+            )}
+
+            {(step === 2 || step === 3) && runningTask && (
+              <button
+                className={`w-full mt-5 bg-black btn rounded-xl ${
+                  loading && 'loading'
+                }`}
+                onClick={restartTask}
+              >
+                Running... Click to restart task
+              </button>
+            )}
+
+            {step === 2 && (
+              <Countdown
+                date={claimStartTime}
+                renderer={rendererCountDown}
+                // onStart={() => setCountStoped(false)}
+                onStop={onStopedCount}
+                onMount={timerMounted}
+                ref={countDownRef}
+              />
+            )}
           </div>
-          <p className="mt-5 text-xl font-bold text-red-500">
-            Security reminder: Please run in a safe enviroment. The private key
-            is only stored in the browser cache.
-          </p>
         </div>
       </div>
       <Footer></Footer>
