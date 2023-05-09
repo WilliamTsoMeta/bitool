@@ -141,10 +141,10 @@ export default function TokenSelector() {
     }
   }, [balance, currentChain])
 
-  function chainChange(value: string) {
+  async function chainChange(value: string) {
     const chain = supportChains.filter((chain) => chain.name === value)
     // url param will changed after wallet chain changed
-    switchNetworkAsync?.(chain[0].id).then(() => {
+    await switchNetworkAsync?.(chain[0].id).then(() => {
       localStorage.setItem('defaultChainId', chain[0].id.toString())
       setcurrentChain(chain[0])
       settokenAddr(chain[0].token)

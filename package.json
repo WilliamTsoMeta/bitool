@@ -7,6 +7,7 @@
     "start:staging": "next start -p 4000",
     "build:staging": "env-cmd -f .env.development npm run build",
     "dev:prod": "env-cmd -f .env.production next dev",
+    "dev:local": "env-cmd -f .env.local next dev",
     "lint": "next lint",
     "build:static": "next build && next export"
   },

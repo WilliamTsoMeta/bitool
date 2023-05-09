@@ -75,7 +75,6 @@ export default function ConnectBtn() {
         }
 
         if (chain?.id) {
-          console.log('validateChain invoke switch chain')
           if (
             router.pathname.indexOf('batch_token_sender') >= 0 &&
             defaultChainId !== chain?.id
@@ -112,9 +111,11 @@ export default function ConnectBtn() {
   useEffect(() => {
     let con = activeConnector ?? connectors[0]
     console.log('con-watch chain', con)
-    connect({ connector: con })
-
-    validateChain()
+    const timer = setTimeout(() => {
+      connect({ connector: con })
+      validateChain()
+      clearTimeout(timer)
+    }, 3000)
   }, [chain, chain?.id])
 
   useEffect(() => {
